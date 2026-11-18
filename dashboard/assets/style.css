@@ -1,0 +1,311 @@
+/* AURA-ICU Dashboard - Hospital Dark Theme */
+/* D. Y. Patil School of Engineering and Management, Kolhapur */
+
+/* ─── Global ─────────────────────────────────────────────────────────────── */
+:root {
+    --bg-primary: #0d1117;
+    --bg-secondary: #161b22;
+    --bg-card: #1c2128;
+    --bg-hover: #21262d;
+    --border-color: #30363d;
+    --text-primary: #e6edf3;
+    --text-secondary: #8b949e;
+    --accent-blue: #58a6ff;
+    --accent-cyan: #39d353;
+    --color-critical: #f85149;
+    --color-elevated: #fd8c73;
+    --color-watch: #e3b341;
+    --color-stable: #3fb950;
+    --color-sentinel: #6e7681;
+    --color-fresh: #3fb950;
+    --color-moderate: #d29922;
+    --color-stale: #f85149;
+}
+
+/* Main background */
+.stApp {
+    background-color: var(--bg-primary) !important;
+    color: var(--text-primary) !important;
+    font-family: 'Segoe UI', system-ui, sans-serif;
+}
+
+/* Sidebar */
+[data-testid="stSidebar"] {
+    background-color: var(--bg-secondary) !important;
+    border-right: 1px solid var(--border-color) !important;
+}
+
+/* ─── Header Branding ─────────────────────────────────────────────────────── */
+.aura-header {
+    background: linear-gradient(135deg, #0d1117 0%, #161b22 50%, #0d1f3c 100%);
+    border: 1px solid #30363d;
+    border-radius: 12px;
+    padding: 20px 28px;
+    margin-bottom: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.aura-title {
+    font-size: 2rem;
+    font-weight: 800;
+    color: #58a6ff;
+    letter-spacing: 2px;
+    margin: 0;
+    text-shadow: 0 0 20px rgba(88, 166, 255, 0.4);
+}
+
+.aura-subtitle {
+    font-size: 0.85rem;
+    color: #8b949e;
+    margin: 4px 0 0 0;
+    letter-spacing: 1px;
+}
+
+.aura-badge {
+    background: rgba(63, 185, 80, 0.15);
+    border: 1px solid #3fb950;
+    border-radius: 20px;
+    padding: 6px 16px;
+    color: #3fb950;
+    font-size: 0.8rem;
+    font-weight: 600;
+    letter-spacing: 1px;
+}
+
+/* ─── Metric Cards ───────────────────────────────────────────────────────── */
+.metric-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+    border-radius: 10px;
+    padding: 16px 20px;
+    text-align: center;
+    transition: border-color 0.2s;
+}
+
+.metric-card:hover {
+    border-color: var(--accent-blue);
+}
+
+.metric-value {
+    font-size: 1.8rem;
+    font-weight: 700;
+    color: #58a6ff;
+    display: block;
+}
+
+.metric-label {
+    font-size: 0.75rem;
+    color: #8b949e;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-top: 4px;
+}
+
+/* ─── Patient Bed Cards ──────────────────────────────────────────────────── */
+.bed-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+    border-radius: 10px;
+    padding: 14px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    min-height: 140px;
+    position: relative;
+}
+
+.bed-card:hover {
+    border-color: #58a6ff;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 20px rgba(88, 166, 255, 0.15);
+}
+
+.bed-card.critical { border-left: 4px solid var(--color-critical); }
+.bed-card.elevated { border-left: 4px solid var(--color-elevated); }
+.bed-card.watch    { border-left: 4px solid var(--color-watch); }
+.bed-card.stable   { border-left: 4px solid var(--color-stable); }
+
+.bed-id {
+    font-size: 0.7rem;
+    color: #8b949e;
+    font-weight: 600;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+}
+
+.risk-pct {
+    font-size: 2rem;
+    font-weight: 800;
+    line-height: 1;
+    margin: 4px 0;
+}
+
+.risk-pct.critical { color: var(--color-critical); }
+.risk-pct.elevated { color: var(--color-elevated); }
+.risk-pct.watch    { color: var(--color-watch); }
+.risk-pct.stable   { color: var(--color-stable); }
+
+.risk-label {
+    font-size: 0.65rem;
+    font-weight: 700;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    padding: 2px 8px;
+    border-radius: 4px;
+    display: inline-block;
+    margin-bottom: 6px;
+}
+
+.risk-label.critical { background: rgba(248,81,73,0.2); color: var(--color-critical); }
+.risk-label.elevated { background: rgba(253,140,115,0.2); color: var(--color-elevated); }
+.risk-label.watch    { background: rgba(227,179,65,0.2); color: var(--color-watch); }
+.risk-label.stable   { background: rgba(63,185,80,0.2); color: var(--color-stable); }
+
+.patient-info {
+    font-size: 0.72rem;
+    color: #8b949e;
+    margin-top: 4px;
+    line-height: 1.4;
+}
+
+/* ─── Staleness Heatmap ──────────────────────────────────────────────────── */
+.staleness-row {
+    display: flex;
+    align-items: center;
+    padding: 6px 10px;
+    border-radius: 6px;
+    margin-bottom: 3px;
+    gap: 10px;
+}
+
+.staleness-lab-name {
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: var(--text-primary);
+    width: 100px;
+    flex-shrink: 0;
+}
+
+.staleness-hours {
+    font-size: 0.75rem;
+    color: var(--text-secondary);
+    width: 55px;
+    text-align: right;
+    flex-shrink: 0;
+}
+
+.staleness-bar-bg {
+    flex: 1;
+    height: 8px;
+    background: #21262d;
+    border-radius: 4px;
+    overflow: hidden;
+}
+
+.staleness-bar {
+    height: 100%;
+    border-radius: 4px;
+    min-width: 4px;
+}
+
+.staleness-badge {
+    font-size: 0.65rem;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    padding: 2px 7px;
+    border-radius: 4px;
+    width: 60px;
+    text-align: center;
+    flex-shrink: 0;
+}
+
+/* ─── Section Headers ────────────────────────────────────────────────────── */
+.section-header {
+    font-size: 0.75rem;
+    font-weight: 700;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: #8b949e;
+    padding: 8px 0 4px 0;
+    border-bottom: 1px solid #30363d;
+    margin-bottom: 12px;
+}
+
+/* ─── Status Pulse ───────────────────────────────────────────────────────── */
+@keyframes pulse-critical {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.4; }
+}
+
+.pulse-critical {
+    animation: pulse-critical 1.5s ease-in-out infinite;
+}
+
+/* ─── Tabs ───────────────────────────────────────────────────────────────── */
+.stTabs [data-baseweb="tab-list"] {
+    background: var(--bg-secondary);
+    border-radius: 8px;
+    padding: 4px;
+    gap: 4px;
+}
+
+.stTabs [data-baseweb="tab"] {
+    background: transparent;
+    color: var(--text-secondary);
+    border-radius: 6px;
+    padding: 8px 16px;
+    font-weight: 600;
+    font-size: 0.85rem;
+}
+
+.stTabs [aria-selected="true"] {
+    background: var(--accent-blue) !important;
+    color: #0d1117 !important;
+}
+
+/* ─── Buttons ────────────────────────────────────────────────────────────── */
+.stButton > button {
+    background: linear-gradient(135deg, #1f6feb, #388bfd);
+    color: white;
+    border: none;
+    border-radius: 8px;
+    padding: 8px 20px;
+    font-weight: 600;
+    font-size: 0.85rem;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.stButton > button:hover {
+    background: linear-gradient(135deg, #388bfd, #58a6ff);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(88, 166, 255, 0.3);
+}
+
+/* ─── Info Boxes ─────────────────────────────────────────────────────────── */
+.info-box {
+    background: rgba(88, 166, 255, 0.08);
+    border: 1px solid rgba(88, 166, 255, 0.3);
+    border-radius: 8px;
+    padding: 12px 16px;
+    font-size: 0.82rem;
+    color: #8b949e;
+    margin: 8px 0;
+}
+
+.warning-box {
+    background: rgba(248, 81, 73, 0.08);
+    border: 1px solid rgba(248, 81, 73, 0.3);
+    border-radius: 8px;
+    padding: 12px 16px;
+    font-size: 0.82rem;
+    color: #f85149;
+    margin: 8px 0;
+}
+
+/* ─── Scrollbar ──────────────────────────────────────────────────────────── */
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: var(--bg-secondary); }
+::-webkit-scrollbar-thumb { background: #30363d; border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: #58a6ff; }

@@ -1,0 +1,25 @@
+{
+  "dataset": "MIMIC-IV v3.1",
+  "cohort": "Adult Mechanically Ventilated ICU Patients",
+  "cohort_size": 23367,
+  "deaths": 4019,
+  "mortality_rate": 0.171995,
+  "landmark_hour": 24,
+  "baseline_auroc": 0.8527,
+  "staleness_auroc": 0.8559,
+  "delta_auroc_pct": 0.319,
+  "p_value_auroc": 0.0,
+  "ci_auroc_95": [
+    0.118,
+    0.512
+  ],
+  "baseline_auprc": 0.5812,
+  "staleness_auprc": 0.5854,
+  "delta_auprc_pct": 0.415,
+  "p_value_auprc": 0.025,
+  "ci_auprc_95": [
+    0.0,
+    0.794
+  ],
+  "statistical_significance": "Statistically Significant (p < 0.05)"
+}

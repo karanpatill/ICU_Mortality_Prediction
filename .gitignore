@@ -1,0 +1,55 @@
+# ─── MIMIC-IV Data (PhysioNet DUA — NEVER commit) ─────────────────────────
+data/mimiciv/
+data/mimiciv/*.csv
+data/mimiciv/*.gz
+
+# ─── Prototype raw PhysioNet files & large parquet files ───────────────────
+prototype/set-a/
+prototype/set-b/
+prototype/set-c/
+prototype/venv/
+prototype/*.parquet
+prototype/Outcomes-*.txt
+
+# ─── Large model files (tracked via Git LFS or downloaded on deployment) ──
+# Uncomment below if model > 100MB; currently ~1MB so it's fine to commit
+# models/*.joblib
+
+# ─── Python ───────────────────────────────────────────────────────────────
+catboost_info/
+__pycache__/
+*.py[cod]
+*$py.class
+*.pyo
+.Python
+env/
+venv/
+.venv/
+ENV/
+*.egg-info/
+dist/
+build/
+.eggs/
+
+# ─── Jupyter ──────────────────────────────────────────────────────────────
+.ipynb_checkpoints/
+*.ipynb_checkpoints
+
+# ─── OS ───────────────────────────────────────────────────────────────────
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# ─── IDE ──────────────────────────────────────────────────────────────────
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# ─── Streamlit ────────────────────────────────────────────────────────────
+.streamlit/secrets.toml
+
+# ─── Research paper build artifacts ───────────────────────────────────────
+research-paper/output/*.png
+# Keep the PDF for reference:
+# research-paper/output/*.pdf
