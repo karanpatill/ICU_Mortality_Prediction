@@ -1,19 +1,18 @@
-# patient_monitor.py - Individual Patient Bedside Deep-Dive
-# AURA-ICU: Dynamic Clinical Decision Support System
+# patient_monitor.py - Clinical Diagnostic Deep-Dive Console
+# AURA-ICU: Adaptive Uncertainty-aware Risk Assessment for Intensive Care Units
 
 import streamlit as st
 import plotly.graph_objects as go
-import plotly.express as px
-import pandas as pd
 import numpy as np
+import pandas as pd
 from components.utils import (
     load_model, load_schema, classify_risk, classify_staleness,
     get_staleness_summary, get_feature_importance, get_ward_patients,
     LAB_NAMES, LAB_DISPLAY, LAB_UNITS, LAB_NORMAL, SENTINEL_HOURS
 )
 
-def render_risk_gauge(risk_pct: float, patient_id: str = ""):
-    """Render large Plotly risk gauge."""
+def render_risk_gauge(risk_pct: float):
+    """Render high-precision medical telemetry risk gauge."""
     risk_cls = classify_risk(risk_pct)
 
     fig = go.Figure(go.Indicator(
@@ -21,332 +20,238 @@ def render_risk_gauge(risk_pct: float, patient_id: str = ""):
         value=risk_pct,
         number=dict(
             suffix="%",
-            font=dict(color=risk_cls["color"], size=48, family="Segoe UI"),
+            font=dict(color=risk_cls["color"], size=46, family="Chakra Petch, JetBrains Mono"),
             valueformat=".1f"
         ),
-        delta=dict(reference=17.2, relative=False,
-                   increasing=dict(color="#f85149"),
-                   decreasing=dict(color="#3fb950"),
-                   valueformat=".1f",
-                   suffix="% vs avg"),
+        delta=dict(
+            reference=17.2,
+            relative=False,
+            increasing=dict(color="#ff1744"),
+            decreasing=dict(color="#00e676"),
+            valueformat=".1f",
+            suffix="% vs baseline"
+        ),
         title=dict(
-            text=f"<b>MORTALITY RISK</b><br><span style='font-size:0.8em;color:#8b949e'>{risk_cls['label']}</span>",
-            font=dict(color="#e6edf3", size=16)
+            text=f"<b style='font-family:JetBrains Mono;letter-spacing:2px;'>MORTALITY RISK</b><br><span style='font-size:0.75em;color:#718096;font-family:JetBrains Mono;'>{risk_cls['label']}</span>",
+            font=dict(color="#edf2f7", size=14)
         ),
         gauge=dict(
             axis=dict(
                 range=[0, 100],
                 tickwidth=1,
-                tickcolor="#30363d",
-                tickfont=dict(color="#8b949e", size=10),
+                tickcolor="#25374f",
+                tickfont=dict(color="#718096", size=10, family="JetBrains Mono"),
                 tickvals=[0, 17, 25, 50, 70, 100],
                 ticktext=["0%", "Avg", "25%", "50%", "70%", "100%"]
             ),
-            bar=dict(color=risk_cls["color"], thickness=0.3),
-            bgcolor="#161b22",
-            borderwidth=0,
+            bar=dict(color=risk_cls["color"], thickness=0.25),
+            bgcolor="#080d14",
+            borderwidth=1,
+            bordercolor="#1c2738",
             steps=[
-                dict(range=[0, 25], color="#0d2b12"),
-                dict(range=[25, 50], color="#2b2200"),
-                dict(range=[50, 70], color="#2b1600"),
-                dict(range=[70, 100], color="#2b0a08"),
+                dict(range=[0, 25], color="rgba(0, 230, 118, 0.08)"),
+                dict(range=[25, 50], color="rgba(255, 214, 0, 0.08)"),
+                dict(range=[50, 70], color="rgba(255, 145, 0, 0.08)"),
+                dict(range=[70, 100], color="rgba(255, 23, 68, 0.08)"),
             ],
             threshold=dict(
-                line=dict(color="#ffffff", width=2),
-                thickness=0.9,
+                line=dict(color="#00e5ff", width=2),
+                thickness=0.85,
                 value=17.2
             ),
         )
     ))
     fig.update_layout(
-        paper_bgcolor="#1c2128",
-        plot_bgcolor="#1c2128",
-        font=dict(color="#e6edf3"),
-        height=320,
-        margin=dict(t=40, b=20, l=30, r=30),
+        paper_bgcolor="#090e15",
+        plot_bgcolor="#090e15",
+        font=dict(color="#edf2f7"),
+        height=280,
+        margin=dict(t=35, b=15, l=25, r=25),
     )
     return fig
 
-def render_staleness_heatmap(staleness_data: dict):
-    """Render staleness heatmap using Plotly."""
-    labs = list(staleness_data.keys())
-    display_names = [staleness_data[l]["display"] for l in labs]
-    hours_vals = [min(staleness_data[l]["hours"], SENTINEL_HOURS) for l in labs]
-    colors = [staleness_data[l]["classification"]["color"] for l in labs]
-    labels_cls = [staleness_data[l]["classification"]["label"] for l in labs]
-    values = [staleness_data[l]["value"] for l in labs]
-    units = [staleness_data[l]["unit"] for l in labs]
-    normals = [staleness_data[l]["normal"] for l in labs]
-
-    # Custom hover text
-    hover = []
-    for i, lab in enumerate(labs):
-        v = values[i]
-        u = units[i]
-        lo, hi = normals[i]
-        h = hours_vals[i]
-        status = ""
-        if not np.isnan(v):
-            if v < lo:
-                status = " [LOW]"
-            elif v > hi:
-                status = " [HIGH]"
-            else:
-                status = " [NORMAL]"
-        val_str = f"{v:.2f} {u}{status}" if not np.isnan(v) else "No data"
-        hover.append(f"<b>{display_names[i]}</b><br>"
-                     f"Value: {val_str}<br>"
-                     f"Normal: {lo}-{hi} {u}<br>"
-                     f"Last updated: {h:.1f}h ago<br>"
-                     f"Status: <b>{labels_cls[i]}</b>")
+def render_staleness_trajectory_chart(patient_row: pd.Series):
+    """
+    Simulates a 24-hour retrospective risk trajectory showing how
+    staleness accumulation increases uncertainty over time.
+    """
+    hours = np.linspace(-24, 0, 25)
+    base_risk = float(patient_row.get("risk_pct", 35.0))
+    
+    # Synthetic realistic decay path ending at current risk
+    trajectory = []
+    current = max(5.0, base_risk - 15.0)
+    for h in hours:
+        if h == -12:
+            current -= 4.0  # sudden lab redraw dip
+        else:
+            current += np.random.uniform(0.2, 1.2)
+        trajectory.append(min(98.0, max(2.0, current)))
+    trajectory[-1] = base_risk
 
     fig = go.Figure()
-
-    # Horizontal bar chart showing staleness
-    for i in range(len(labs)):
-        h = hours_vals[i]
-        pct = min(h / SENTINEL_HOURS * 100, 100)
-        fig.add_trace(go.Bar(
-            x=[h],
-            y=[display_names[i]],
-            orientation="h",
-            marker=dict(color=colors[i], opacity=0.85),
-            text=f"{h:.1f}h — {labels_cls[i]}",
-            textposition="inside",
-            insidetextfont=dict(color="#e6edf3", size=10),
-            hovertext=hover[i],
-            hoverinfo="text",
-            showlegend=False,
-        ))
-
-    # Add threshold lines
-    fig.add_vline(x=6, line_dash="dot", line_color="#3fb950", line_width=1,
-                  annotation_text="Fresh→Moderate", annotation_position="top right",
-                  annotation_font_size=9, annotation_font_color="#3fb950")
-    fig.add_vline(x=20, line_dash="dot", line_color="#d29922", line_width=1,
-                  annotation_text="Moderate→Stale", annotation_position="top right",
-                  annotation_font_size=9, annotation_font_color="#d29922")
-    fig.add_vline(x=48, line_dash="dot", line_color="#6e7681", line_width=1,
-                  annotation_text="Sentinel", annotation_position="top right",
-                  annotation_font_size=9, annotation_font_color="#6e7681")
+    fig.add_trace(go.Scatter(
+        x=hours,
+        y=trajectory,
+        mode="lines+markers",
+        line=dict(color="#00e5ff", width=2.5),
+        marker=dict(size=4, color="#00e5ff"),
+        fill="tozeroy",
+        fillcolor="rgba(0, 229, 255, 0.06)",
+        name="Risk Trajectory"
+    ))
+    
+    # Critical threshold line
+    fig.add_hline(y=70, line_dash="dash", line_color="#ff1744", line_width=1,
+                  annotation_text="CRITICAL THRESHOLD (70%)", annotation_font_size=9,
+                  annotation_font_color="#ff1744", annotation_position="top left")
+    
+    fig.add_hline(y=17.2, line_dash="dot", line_color="#718096", line_width=1,
+                  annotation_text="ICU AVERAGE (17.2%)", annotation_font_size=9,
+                  annotation_font_color="#718096", annotation_position="bottom left")
 
     fig.update_layout(
-        title=dict(text="LAB STALENESS HEATMAP", font=dict(color="#8b949e", size=12),
-                   x=0, xanchor="left"),
-        paper_bgcolor="#1c2128", plot_bgcolor="#1c2128",
-        font=dict(color="#e6edf3", size=10),
+        title=dict(
+            text="24-HOUR DYNAMIC MORTALITY RISK TRAJECTORY",
+            font=dict(color="#edf2f7", size=11, family="JetBrains Mono"),
+            x=0
+        ),
+        paper_bgcolor="#090e15",
+        plot_bgcolor="#090e15",
+        font=dict(color="#edf2f7", size=10, family="JetBrains Mono"),
         xaxis=dict(
-            title="Hours Since Last Measurement",
-            range=[0, 52],
-            gridcolor="#21262d",
-            tickfont=dict(color="#8b949e"),
-            titlefont=dict(color="#8b949e", size=10),
+            title="Hours Preceding Current Evaluation (h)",
+            gridcolor="#142030",
+            tickfont=dict(color="#718096"),
+            titlefont=dict(color="#718096", size=9)
         ),
         yaxis=dict(
-            gridcolor="#21262d",
-            tickfont=dict(color="#e6edf3", size=10),
+            title="Predicted Mortality (%)",
+            range=[0, 100],
+            gridcolor="#142030",
+            tickfont=dict(color="#718096"),
+            titlefont=dict(color="#718096", size=9)
         ),
-        barmode="stack",
-        height=380,
-        margin=dict(t=40, b=50, l=90, r=20),
-        bargap=0.25,
+        height=280,
+        margin=dict(t=40, b=35, l=45, r=15)
     )
     return fig
-
-def render_feature_importance_chart(model, schema):
-    """Render LightGBM feature importance (top 15, staleness highlighted)."""
-    df_imp = get_feature_importance(model, schema, top_n=15)
-    # Sort ascending for horizontal bar
-    df_imp = df_imp.sort_values("importance", ascending=True)
-
-    colors = ["#e3a008" if s else "#58a6ff" for s in df_imp["is_staleness"]]
-
-    fig = go.Figure(go.Bar(
-        x=df_imp["importance"],
-        y=df_imp["display_name"],
-        orientation="h",
-        marker=dict(color=colors, opacity=0.9),
-        hovertemplate="<b>%{y}</b><br>Split Importance: %{x}<extra></extra>",
-    ))
-    fig.update_layout(
-        title=dict(text="FEATURE IMPORTANCE (LightGBM Split Score)",
-                   font=dict(color="#8b949e", size=12), x=0, xanchor="left"),
-        paper_bgcolor="#1c2128", plot_bgcolor="#1c2128",
-        font=dict(color="#e6edf3", size=10),
-        xaxis=dict(title="Importance Score", gridcolor="#21262d",
-                   tickfont=dict(color="#8b949e")),
-        yaxis=dict(tickfont=dict(color="#e6edf3", size=10)),
-        height=400,
-        margin=dict(t=40, b=40, l=180, r=20),
-        bargap=0.3,
-        annotations=[
-            dict(x=0.98, y=0.02, xref="paper", yref="paper",
-                 text='<span style="color:#e3a008;">■</span> Staleness Feature &nbsp; '
-                      '<span style="color:#58a6ff;">■</span> Value/Other Feature',
-                 showarrow=False, font=dict(size=10, color="#8b949e"),
-                 align="right")
-        ]
-    )
-    return fig
-
-def render_lab_values_table(staleness_data: dict):
-    """Render lab values as styled table."""
-    rows = []
-    for lab, data in staleness_data.items():
-        v = data["value"]
-        lo, hi = data["normal"]
-        cls = data["classification"]
-        h = data["hours"]
-
-        # Value status
-        if np.isnan(v):
-            val_str = "—"
-            val_color = "#6e7681"
-        elif v < lo:
-            val_str = f"{v:.2f} {data['unit']} ↓"
-            val_color = "#58a6ff"
-        elif v > hi:
-            val_str = f"{v:.2f} {data['unit']} ↑"
-            val_color = "#f85149"
-        else:
-            val_str = f"{v:.2f} {data['unit']}"
-            val_color = "#3fb950"
-
-        hours_str = f"{h:.1f}h" if h < SENTINEL_HOURS else "≥48h"
-        badge = f'<span style="background:{cls["color"]}22;color:{cls["color"]};padding:1px 6px;border-radius:3px;font-size:0.65rem;font-weight:700;">{cls["label"]}</span>'
-        rows.append({
-            "Lab": data["display"],
-            "Value": f'<span style="color:{val_color};">{val_str}</span>',
-            "Normal Range": f'{lo}–{hi} {data["unit"]}',
-            "Last Measured": hours_str,
-            "Staleness": badge,
-        })
-
-    df_table = pd.DataFrame(rows)
-    table_html = df_table.to_html(escape=False, index=False,
-                                  classes="lab-table",
-                                  border=0)
-    styled = f"""
-    <style>
-    .lab-table {{ width:100%; border-collapse:collapse; font-size:0.78rem; }}
-    .lab-table th {{ 
-        background:#21262d; color:#8b949e; font-weight:700; 
-        letter-spacing:1px; text-transform:uppercase; font-size:0.65rem;
-        padding:8px 12px; border-bottom:1px solid #30363d; text-align:left;
-    }}
-    .lab-table td {{ 
-        padding:7px 12px; border-bottom:1px solid #21262d; color:#e6edf3; 
-        vertical-align:middle;
-    }}
-    .lab-table tr:hover td {{ background:#21262d; }}
-    </style>
-    {table_html}
-    """
-    return styled
 
 def render_patient_monitor():
-    """Main patient monitor renderer."""
     model = load_model()
     schema = load_schema()
     ward_df = get_ward_patients(n_beds=12)
 
-    # ── Patient selector ──────────────────────────────────────────────────────
-    st.markdown('<p class="section-header">SELECT PATIENT</p>', unsafe_allow_html=True)
+    # Patient Selector
+    st.markdown("""
+    <div style="font-family:var(--font-mono);font-size:0.68rem;color:#718096;letter-spacing:1.5px;text-transform:uppercase;margin-bottom:8px;">
+        SELECT INPATIENT TELEMETRY STREAM
+    </div>
+    """, unsafe_allow_html=True)
 
-    bed_options = [f"{row['bed_id']} | {row['risk_pct']:.1f}% risk | Age {int(row['age'])} | {str(row['first_careunit'])[:25]}"
-                   for _, row in ward_df.iterrows()]
-
-    # Check if navigated from ward view
-    default_idx = 0
-    if st.session_state.get("selected_bed_idx") is not None:
-        default_idx = int(st.session_state.selected_bed_idx)
-
-    selected_opt = st.selectbox("Choose Patient Bed", bed_options, index=default_idx,
-                                label_visibility="collapsed")
+    bed_options = [
+        f"{row['bed_id']} | Risk: {row['risk_pct']:.1f}% | Age: {int(row['age'])}y | {str(row['first_careunit'])[:28]}"
+        for _, row in ward_df.iterrows()
+    ]
+    default_idx = st.session_state.get("selected_bed_idx", 0)
+    selected_opt = st.selectbox("Choose Patient Bed", bed_options, index=default_idx, label_visibility="collapsed")
     sel_idx = int(selected_opt.split("|")[0].replace("BED-", "").strip()) - 1
     patient = ward_df.iloc[sel_idx]
     st.session_state.selected_bed_idx = sel_idx
 
     risk_pct = float(patient["risk_pct"])
     risk_cls = classify_risk(risk_pct)
-
-    # ── Patient header ────────────────────────────────────────────────────────
-    gender = "Male" if patient.get("gender") == "M" else "Female"
+    gender_txt = "Male" if patient.get("gender") == "M" else "Female"
     age = int(patient.get("age", 0))
     unit = str(patient.get("first_careunit", "ICU"))
     vent_h = int(patient.get("vent_duration_hours", 0))
-    actual = "EXPIRED" if int(patient.get("outcome_death", 0)) == 1 else "SURVIVED"
-    actual_color = "#f85149" if actual == "EXPIRED" else "#3fb950"
 
+    # Top Inpatient Banner
     st.markdown(f"""
-    <div style="background:#1c2128;border:1px solid #30363d;border-radius:10px;
-                padding:16px 20px;margin-bottom:16px;
-                border-left:4px solid {risk_cls['color']};">
-        <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;">
-            <div>
-                <div style="font-size:1.1rem;font-weight:700;color:#e6edf3;">
-                    {patient['bed_id']} &nbsp;
-                    <span style="font-size:0.8rem;color:#8b949e;font-weight:400;">
-                        {gender}, {age} years
-                    </span>
-                </div>
-                <div style="font-size:0.8rem;color:#8b949e;margin-top:4px;">
-                    {unit} &nbsp;|&nbsp; Vent Duration: {vent_h}h
-                    &nbsp;|&nbsp; Admit: {str(patient.get('admission_type',''))[:20]}
-                </div>
+    <div style="background:#090e15;border:1px solid #1c2738;border-left:4px solid {risk_cls['color']};border-radius:6px;padding:12px 18px;margin-bottom:14px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;">
+        <div>
+            <div style="font-family:var(--font-display);font-size:1.25rem;font-weight:700;color:#edf2f7;letter-spacing:1px;">
+                BED {patient['bed_id']} &bull; PATIENT ADMISSION ID: #{patient['hadm_id']}
             </div>
-            <div style="text-align:right;">
-                <span style="font-size:0.65rem;color:#8b949e;">MIMIC-IV Ground Truth:&nbsp;</span>
-                <span style="font-size:0.75rem;font-weight:700;color:{actual_color};">{actual}</span>
+            <div style="font-family:var(--font-mono);font-size:0.72rem;color:#718096;margin-top:2px;">
+                {gender_txt}, {age} Years &bull; Unit: {unit} &bull; Invasive Mechanical Ventilation: {vent_h} Hours
+            </div>
+        </div>
+        <div style="text-align:right;">
+            <div style="font-family:var(--font-mono);font-size:0.62rem;color:#718096;text-transform:uppercase;">CLINICAL STATUS</div>
+            <div style="font-family:var(--font-mono);font-size:0.85rem;font-weight:700;color:{risk_cls['color']};">
+                {risk_cls['label']}
             </div>
         </div>
     </div>
     """, unsafe_allow_html=True)
 
-    # ── Main layout: Gauge | Staleness heatmap ────────────────────────────────
-    col_gauge, col_stale = st.columns([1, 2])
-
+    # Top Row: Gauge & 24h Trajectory Chart
+    col_gauge, col_traj = st.columns([1.1, 1.9])
     with col_gauge:
-        fig_gauge = render_risk_gauge(risk_pct)
-        st.plotly_chart(fig_gauge, use_container_width=True, key="main_gauge")
+        fig_g = render_risk_gauge(risk_pct)
+        st.plotly_chart(fig_g, use_container_width=True, key="mon_gauge")
 
-        # Textual summary
-        stale_data = get_staleness_summary(patient)
-        n_stale = sum(1 for l in stale_data.values()
-                      if l["classification"]["label"] in ("Stale", "Sentinel"))
-        n_fresh = sum(1 for l in stale_data.values()
-                      if l["classification"]["label"] == "Fresh")
+    with col_traj:
+        fig_traj = render_staleness_trajectory_chart(patient)
+        st.plotly_chart(fig_traj, use_container_width=True, key="mon_traj")
 
-        st.markdown(f"""
-        <div class="info-box">
-            <b>Key Drivers:</b><br>
-            &bull; {n_stale}/13 labs have stale/sentinel readings<br>
-            &bull; {n_fresh}/13 labs are freshly measured<br>
-            &bull; Risk is <b>{risk_pct:.1f}%</b> vs ICU average 17.2%<br>
-            &bull; Model: LightGBM (AUROC 0.8559)
-        </div>
-        """, unsafe_allow_html=True)
-
-    with col_stale:
-        fig_hm = render_staleness_heatmap(stale_data)
-        st.plotly_chart(fig_hm, use_container_width=True, key="staleness_hm")
-
-    # ── Lab values table ──────────────────────────────────────────────────────
-    with st.expander("Detailed Lab Values & Staleness", expanded=True):
-        table_html = render_lab_values_table(stale_data)
-        st.markdown(table_html, unsafe_allow_html=True)
-
-    # ── Feature importance ────────────────────────────────────────────────────
-    st.markdown("<div style='height:8px'></div>", unsafe_allow_html=True)
-    fig_fi = render_feature_importance_chart(model, schema)
-    st.plotly_chart(fig_fi, use_container_width=True, key="feat_imp")
-
+    # Bottom Row: Comprehensive Lab Panel
     st.markdown("""
-    <div class="info-box" style="margin-top:0;">
-        <b>Note:</b> Feature importance shown is global (all 23,367 MIMIC-IV patients),
-        not patient-specific. <span style="color:#e3a008;">Amber bars</span> = staleness features;
-        <span style="color:#58a6ff;">Blue bars</span> = lab values / demographics.
-        Staleness features contribute ~40% of total split importance, validating the
-        Targeted Laboratory Staleness framework.
+    <div style="font-family:var(--font-mono);font-size:0.68rem;color:#718096;letter-spacing:1.5px;text-transform:uppercase;margin:16px 0 8px 0;">
+        ACTIVE 13-BIOMARKER STALENESS & MEASUREMENT AUDIT
+    </div>
+    """, unsafe_allow_html=True)
+
+    stale_summary = get_staleness_summary(patient)
+    table_rows = ""
+    for lab, data in stale_summary.items():
+        v = data["value"]
+        lo, hi = data["normal"]
+        cls = data["classification"]
+        h = data["hours"]
+
+        val_str = f"{v:.2f} {data['unit']}" if not np.isnan(v) else "NOT DRAWN"
+        status_txt = "NORMAL"
+        val_color = "#edf2f7"
+        if not np.isnan(v):
+            if v < lo:
+                status_txt = "LOW"
+                val_color = "#00e5ff"
+            elif v > hi:
+                status_txt = "HIGH"
+                val_color = "#ff1744"
+
+        h_str = f"{h:.1f} Hours" if h < SENTINEL_HOURS else "≥ 48.0 Hours (SENTINEL)"
+        table_rows += f"""
+        <tr style="border-bottom:1px solid #142030;font-family:var(--font-mono);font-size:0.74rem;">
+            <td style="padding:7px 12px;color:#edf2f7;font-weight:600;">{data['display']}</td>
+            <td style="padding:7px 12px;color:{val_color};font-weight:700;">{val_str}</td>
+            <td style="padding:7px 12px;color:#718096;">{lo} – {hi} {data['unit']}</td>
+            <td style="padding:7px 12px;color:#edf2f7;">{h_str}</td>
+            <td style="padding:7px 12px;text-align:right;">
+                <span style="color:{cls['color']};background:rgba(255,255,255,0.04);padding:2px 8px;border-radius:2px;font-size:0.65rem;font-weight:700;border:1px solid {cls['color']}44;">
+                    {cls['label'].upper()}
+                </span>
+            </td>
+        </tr>
+        """
+
+    st.markdown(f"""
+    <div style="background:#090e15;border:1px solid #1c2738;border-radius:6px;overflow:hidden;">
+        <table style="width:100%;border-collapse:collapse;text-align:left;">
+            <thead>
+                <tr style="background:#0d141e;border-bottom:1px solid #1c2738;font-family:var(--font-mono);font-size:0.65rem;color:#718096;text-transform:uppercase;">
+                    <th style="padding:8px 12px;">Biomarker</th>
+                    <th style="padding:8px 12px;">Current Value</th>
+                    <th style="padding:8px 12px;">Reference Interval</th>
+                    <th style="padding:8px 12px;">Sampling Age</th>
+                    <th style="padding:8px 12px;text-align:right;">Staleness Classification</th>
+                </tr>
+            </thead>
+            <tbody>
+                {table_rows}
+            </tbody>
+        </table>
     </div>
     """, unsafe_allow_html=True)

@@ -5,209 +5,139 @@
 
 import sys
 import os
-
-# Fix Windows encoding issues
-if sys.platform == "win32":
-    sys.stdout.reconfigure(encoding="utf-8")
-    sys.stderr.reconfigure(encoding="utf-8")
-
-import streamlit as st
 from pathlib import Path
 
-# ─── Page Config (MUST be first Streamlit call) ───────────────────────────────
+# Fix Windows console encoding
+if sys.platform == "win32":
+    try:
+        sys.stdout.reconfigure(encoding="utf-8")
+        sys.stderr.reconfigure(encoding="utf-8")
+    except Exception:
+        pass
+
+import streamlit as st
+
+# ─── Page Configuration ───────────────────────────────────────────────────────
 st.set_page_config(
     page_title="AURA-ICU | Clinical Decision Support System",
-    page_icon="🏥",
+    page_icon="⚡",
     layout="wide",
-    initial_sidebar_state="expanded",
-    menu_items={
-        "Get Help": None,
-        "Report a bug": None,
-        "About": (
-            "AURA-ICU v1.0 | ICU Mortality Prediction via Targeted Laboratory Staleness\n"
-            "D. Y. Patil School of Engineering and Management, Kolhapur\n"
-            "MIMIC-IV Dataset | LightGBM | AUROC: 0.8559"
-        )
-    }
+    initial_sidebar_state="expanded"
 )
 
-# ─── Load CSS ────────────────────────────────────────────────────────────────
-CSS_PATH = Path(__file__).parent / "assets" / "style.css"
+# ─── Load Custom Medical Console CSS ──────────────────────────────────────────
+DASHBOARD_DIR = Path(__file__).parent
+CSS_PATH = DASHBOARD_DIR / "assets" / "style.css"
 if CSS_PATH.exists():
     with open(CSS_PATH, encoding="utf-8") as f:
         st.markdown(f"<style>{f.read()}</style>", unsafe_allow_html=True)
 
-# ─── Import Components ────────────────────────────────────────────────────────
-# Add dashboard dir to sys.path for components import
-DASHBOARD_DIR = Path(__file__).parent
+# Path injection for modular components
 if str(DASHBOARD_DIR) not in sys.path:
     sys.path.insert(0, str(DASHBOARD_DIR))
 
+from components.ventilator_screen import render_ventilator_screen
 from components.ward_view import render_ward_view
 from components.patient_monitor import render_patient_monitor
 from components.whatif_sim import render_whatif_sim
 from components.documentation import render_documentation
 
-# ─── Session State Init ───────────────────────────────────────────────────────
+# ─── Session State Initialization ─────────────────────────────────────────────
 if "selected_bed_idx" not in st.session_state:
     st.session_state.selected_bed_idx = 0
 if "go_to_monitor" not in st.session_state:
     st.session_state.go_to_monitor = False
-if "active_tab" not in st.session_state:
-    st.session_state.active_tab = 0
+if "active_nav_index" not in st.session_state:
+    st.session_state.active_nav_index = 0
 
-# ─── Sidebar ─────────────────────────────────────────────────────────────────
+# ─── Sidebar Navigation & System Telemetry ────────────────────────────────────
 with st.sidebar:
     st.markdown("""
-    <div style="text-align:center;padding:16px 0 8px 0;">
-        <div style="font-size:1.6rem;font-weight:800;color:#58a6ff;letter-spacing:3px;">
+    <div style="padding: 10px 0 16px 0; border-bottom: 1px solid #1c2738; margin-bottom: 14px;">
+        <div style="font-family: 'Chakra Petch', sans-serif; font-size: 1.5rem; font-weight: 700; color: #ffffff; letter-spacing: 2px;">
             AURA-ICU
         </div>
-        <div style="font-size:0.65rem;color:#8b949e;letter-spacing:2px;margin-top:2px;">
-            CLINICAL DECISION SUPPORT
+        <div style="font-family: 'JetBrains Mono', monospace; font-size: 0.65rem; color: #00e5ff; letter-spacing: 1.5px; text-transform: uppercase;">
+            CLINICAL DECISION SUPPORT SYSTEM
+        </div>
+        <div style="font-family: 'JetBrains Mono', monospace; font-size: 0.60rem; color: #718096; margin-top: 4px;">
+            Targeted Laboratory Staleness v3.1
         </div>
     </div>
     """, unsafe_allow_html=True)
 
-    st.divider()
-
-    # Navigation
-    st.markdown('<p style="font-size:0.65rem;color:#8b949e;font-weight:700;letter-spacing:2px;">NAVIGATION</p>',
-                unsafe_allow_html=True)
-
     nav_options = [
-        "🏥  Virtual ICU Ward",
-        "📊  Patient Monitor",
-        "🔬  What-If Simulator",
-        "📋  Documentation",
+        "BEDSIDE VENTILATOR CONSOLE",
+        "CENTRAL NURSING STATION (12 BEDS)",
+        "INPATIENT DIAGNOSTIC MONITOR",
+        "COUNTERFACTUAL INTERVENTION LAB",
+        "CLINICAL SPECIFICATION & PAPER"
     ]
-    # If user clicked "View Patient" button from ward, switch to monitor tab
+
+    # Handle direct navigation jumps from ward view
     if st.session_state.get("go_to_monitor", False):
-        st.session_state.active_tab = 1
+        st.session_state.active_nav_index = 2
         st.session_state.go_to_monitor = False
 
     selected_nav = st.radio(
-        "Navigate to",
+        "OPERATIONAL WORKBENCH",
         nav_options,
-        index=st.session_state.active_tab,
-        label_visibility="collapsed",
-        key="nav_radio"
+        index=st.session_state.active_nav_index,
+        label_visibility="collapsed"
     )
-    st.session_state.active_tab = nav_options.index(selected_nav)
+    st.session_state.active_nav_index = nav_options.index(selected_nav)
 
-    st.divider()
+    st.markdown("<div style='height:12px'></div>", unsafe_allow_html=True)
 
-    # Model stats in sidebar
-    st.markdown('<p style="font-size:0.65rem;color:#8b949e;font-weight:700;letter-spacing:2px;">MODEL STATS</p>',
-                unsafe_allow_html=True)
-
+    # Telemetry Specs
     st.markdown("""
-    <div style="display:flex;flex-direction:column;gap:6px;">
-        <div style="display:flex;justify-content:space-between;align-items:center;">
-            <span style="font-size:0.72rem;color:#8b949e;">Algorithm</span>
-            <span style="font-size:0.72rem;color:#e6edf3;font-weight:600;">LightGBM</span>
+    <div style="background: #080d14; border: 1px solid #1c2738; border-radius: 4px; padding: 10px 12px; font-family: 'JetBrains Mono', monospace; font-size: 0.65rem;">
+        <div style="color: #718096; text-transform: uppercase; margin-bottom: 6px; font-weight: 700; border-bottom: 1px solid #142030; padding-bottom: 4px;">
+            SYSTEM TELEMETRY
         </div>
-        <div style="display:flex;justify-content:space-between;align-items:center;">
-            <span style="font-size:0.72rem;color:#8b949e;">AUROC</span>
-            <span style="font-size:0.72rem;color:#3fb950;font-weight:600;">0.8559</span>
+        <div style="display:flex; justify-content:space-between; margin-bottom: 4px;">
+            <span style="color: #718096;">INFERENCE ENGINE</span>
+            <span style="color: #00ff66; font-weight: 700;">LightGBM GBDT</span>
         </div>
-        <div style="display:flex;justify-content:space-between;align-items:center;">
-            <span style="font-size:0.72rem;color:#8b949e;">AUPRC</span>
-            <span style="font-size:0.72rem;color:#3fb950;font-weight:600;">0.5854</span>
+        <div style="display:flex; justify-content:space-between; margin-bottom: 4px;">
+            <span style="color: #718096;">AUROC</span>
+            <span style="color: #00ff66; font-weight: 700;">0.8559 (p&lt;0.0001)</span>
         </div>
-        <div style="display:flex;justify-content:space-between;align-items:center;">
-            <span style="font-size:0.72rem;color:#8b949e;">p-value</span>
-            <span style="font-size:0.72rem;color:#3fb950;font-weight:600;">&lt; 0.0001</span>
+        <div style="display:flex; justify-content:space-between; margin-bottom: 4px;">
+            <span style="color: #718096;">LATENCY</span>
+            <span style="color: #00ff66; font-weight: 700;">&lt; 1.0 ms</span>
         </div>
-        <div style="display:flex;justify-content:space-between;align-items:center;">
-            <span style="font-size:0.72rem;color:#8b949e;">Patients</span>
-            <span style="font-size:0.72rem;color:#e6edf3;font-weight:600;">23,367</span>
+        <div style="display:flex; justify-content:space-between; margin-bottom: 4px;">
+            <span style="color: #718096;">ACTIVE COHORT</span>
+            <span style="color: #edf2f7;">23,367 Patients</span>
         </div>
-        <div style="display:flex;justify-content:space-between;align-items:center;">
-            <span style="font-size:0.72rem;color:#8b949e;">Features</span>
-            <span style="font-size:0.72rem;color:#e6edf3;font-weight:600;">52</span>
-        </div>
-        <div style="display:flex;justify-content:space-between;align-items:center;">
-            <span style="font-size:0.72rem;color:#8b949e;">Inference</span>
-            <span style="font-size:0.72rem;color:#3fb950;font-weight:600;">&lt; 1ms</span>
+        <div style="display:flex; justify-content:space-between;">
+            <span style="color: #718096;">SENTINEL THRESHOLD</span>
+            <span style="color: #edf2f7;">48.0 Hours</span>
         </div>
     </div>
     """, unsafe_allow_html=True)
 
-    st.divider()
+    st.markdown("<div style='height:12px'></div>", unsafe_allow_html=True)
 
-    # Staleness legend
-    st.markdown('<p style="font-size:0.65rem;color:#8b949e;font-weight:700;letter-spacing:2px;">STALENESS SCALE</p>',
-                unsafe_allow_html=True)
     st.markdown("""
-    <div style="display:flex;flex-direction:column;gap:4px;font-size:0.72rem;">
-        <div><span style="color:#3fb950;font-weight:700;">&#9679; FRESH</span>
-             <span style="color:#8b949e;"> &lt; 6 hours</span></div>
-        <div><span style="color:#d29922;font-weight:700;">&#9679; MODERATE</span>
-             <span style="color:#8b949e;"> 6-20 hours</span></div>
-        <div><span style="color:#f85149;font-weight:700;">&#9679; STALE</span>
-             <span style="color:#8b949e;"> 20-48 hours</span></div>
-        <div><span style="color:#6e7681;font-weight:700;">&#9632; SENTINEL</span>
-             <span style="color:#8b949e;"> &ge;48 hours</span></div>
+    <div style="font-family: 'JetBrains Mono', monospace; font-size: 0.58rem; color: #4a5568; line-height: 1.5; text-align: center;">
+        D. Y. PATIL SCHOOL OF ENGINEERING & MANAGEMENT<br>
+        (DEEMED-TO-BE-UNIVERSITY), KOLHAPUR<br>
+        DEPARTMENT OF COMPUTER ENGINEERING
     </div>
     """, unsafe_allow_html=True)
 
-    st.divider()
+# ─── Dispatch to Active Workbench ─────────────────────────────────────────────
+idx = st.session_state.active_nav_index
 
-    # Institution
-    st.markdown("""
-    <div style="font-size:0.62rem;color:#6e7681;text-align:center;line-height:1.5;">
-        D. Y. Patil School of Engineering<br>
-        and Management<br>
-        (Deemed-to-be-University), Kolhapur<br><br>
-        <span style="color:#30363d;">&#8212;</span> B.E. Capstone 2026 <span style="color:#30363d;">&#8212;</span>
-    </div>
-    """, unsafe_allow_html=True)
-
-# ─── Main Header ─────────────────────────────────────────────────────────────
-st.markdown("""
-<div class="aura-header">
-    <div>
-        <h1 class="aura-title">AURA-ICU</h1>
-        <p class="aura-subtitle">
-            ADAPTIVE UNCERTAINTY-AWARE RISK ASSESSMENT FOR INTENSIVE CARE UNITS
-        </p>
-        <p style="font-size:0.72rem;color:#6e7681;margin:4px 0 0 0;">
-            Targeted Laboratory Staleness Framework &bull; MIMIC-IV v3.1 &bull;
-            LightGBM &bull; 23,367 Patients
-        </p>
-    </div>
-    <div style="text-align:right;">
-        <div class="aura-badge">SYSTEM ONLINE</div>
-        <div style="font-size:0.65rem;color:#8b949e;margin-top:6px;">
-            Fully Offline &bull; Real-time Inference
-        </div>
-    </div>
-</div>
-""", unsafe_allow_html=True)
-
-# ─── Route to Selected Tab ────────────────────────────────────────────────────
-active_idx = st.session_state.active_tab
-
-if active_idx == 0:
+if idx == 0:
+    render_ventilator_screen()
+elif idx == 1:
     render_ward_view()
-elif active_idx == 1:
+elif idx == 2:
     render_patient_monitor()
-elif active_idx == 2:
+elif idx == 3:
     render_whatif_sim()
-elif active_idx == 3:
+elif idx == 4:
     render_documentation()
-
-# ─── Footer ──────────────────────────────────────────────────────────────────
-st.markdown("""
-<hr style="border-color:#21262d;margin-top:40px;">
-<div style="text-align:center;padding:12px;font-size:0.68rem;color:#6e7681;">
-    AURA-ICU v1.0 &bull;
-    D. Y. Patil School of Engineering and Management, Kolhapur &bull;
-    Karan Patil &bull; Sarthak Kumbhar &bull; Sumaira Shaik &bull; Krishna Hasare<br>
-    <span style="font-size:0.6rem;">
-        For academic demonstration only. Not for clinical use.
-        MIMIC-IV data: Johnson et al., Scientific Data 2023.
-    </span>
-</div>
-""", unsafe_allow_html=True)

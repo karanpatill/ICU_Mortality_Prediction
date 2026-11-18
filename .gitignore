@@ -48,6 +48,7 @@ desktop.ini
 
 # ─── Streamlit ────────────────────────────────────────────────────────────
 .streamlit/secrets.toml
+push_to_github.bat
 
 # ─── Research paper build artifacts ───────────────────────────────────────
 research-paper/output/*.png
