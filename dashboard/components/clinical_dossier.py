@@ -84,7 +84,7 @@ def render_clinical_dossier():
     schema = load_schema()
     clinical_cases = load_real_mimic_cases()
 
-    st.markdown("### 📋 Clinical Inpatient Triage & On-Demand AI Prediction")
+    st.markdown("### Clinical Inpatient Triage & On-Demand AI Prediction")
     st.caption("10 Authenticated Real MIMIC-IV Clinical Cohort Inpatients (Beth Israel Deaconess Medical Center, Boston)")
 
     if "dossier_selected_id" not in st.session_state:
@@ -122,7 +122,7 @@ def render_clinical_dossier():
             st.caption(f"{gender_str}, {active_case['age']}y | {active_case['unit']}")
             st.caption(f"Ventilated: {active_case['vent_duration_hours']}h | {active_case['admission_type']}")
 
-    st.markdown("#### 🧪 Recorded Biomarkers & Observation Staleness")
+    st.markdown("#### Recorded Biomarkers & Observation Staleness")
 
     # Native Streamlit Dataframe for 100% Clean Zero-HTML Rendering
     table_rows = []
@@ -140,10 +140,10 @@ def render_clinical_dossier():
 
     st.markdown("<div style='height: 8px;'></div>", unsafe_allow_html=True)
 
-    # Big On-Demand AI Prediction Button
+    # Big On-Demand AI Prediction Button (No Emojis)
     c_btn, _ = st.columns([1.5, 1])
     with c_btn:
-        run_clicked = st.button("⚡ EXECUTE AURA-ICU AI PREDICTION INFERENCE", use_container_width=True)
+        run_clicked = st.button("EXECUTE AURA-ICU AI PREDICTION INFERENCE", use_container_width=True)
 
     if run_clicked:
         progress_bar = st.progress(0)
@@ -190,23 +190,23 @@ def render_clinical_dossier():
                 st.metric("Predicted Mortality Risk", f"{risk_pct:.1f}%")
                 st.markdown(f"**Clinical Status:** `{risk_cls['label']}`")
                 st.markdown(f"**MIMIC-IV Ground Truth:** `{actual_outcome}`")
-                match_txt = "✅ EXACT ALIGNMENT" if (risk_pct >= 50 and actual_outcome == "EXPIRED") or (risk_pct < 50 and actual_outcome == "SURVIVED") else "EVALUATED"
+                match_txt = "EXACT ALIGNMENT" if (risk_pct >= 50 and actual_outcome == "EXPIRED") or (risk_pct < 50 and actual_outcome == "SURVIVED") else "EVALUATED"
                 st.caption(f"Model Outcome Match: {match_txt}")
 
         with res2:
             with st.container(border=True):
                 if risk_pct >= 70:
-                    st.error("🚨 CRITICAL DETERIORATION PROTOCOL ACTIVATED")
+                    st.error("CRITICAL DETERIORATION PROTOCOL ACTIVATED")
                     st.write("- **Stat Diagnostic Lab Refresh:** Repeat Arterial Blood Gas (ABG) & Lactate immediately (staleness uncertainty critical).")
                     st.write("- **Hemodynamic Resuscitation:** Titrate vasopressors; maintain MAP > 65 mmHg; evaluate cardiac index.")
                     st.write("- **Lung-Protective Ventilation:** Ensure tidal volume <= 6 mL/kg PBW; check plateau pressure < 30 cmH2O.")
                 elif risk_pct >= 40:
-                    st.warning("⚠️ ELEVATED SURVEILLANCE & ORGAN TREND PROTOCOL")
+                    st.warning("ELEVATED SURVEILLANCE & ORGAN TREND PROTOCOL")
                     st.write("- **Organ Function Monitoring:** Serial renal panel and serum creatinine within next 4 hours.")
                     st.write("- **Ventilator Weaning Vigilance:** Defer spontaneous breathing trial until arterial acid-base balance stabilizes.")
                     st.write("- **Volume Status Review:** Assess fluid overload, lung compliance, and vasopressor weaning readiness.")
                 else:
-                    st.success("✅ PHYSIOLOGICALLY STABLE — EXTUBATION CANDIDATE")
+                    st.success("PHYSIOLOGICALLY STABLE — EXTUBATION CANDIDATE")
                     st.write("- **Spontaneous Breathing Trial (SBT):** Patient satisfies clinical stability criteria for weaning protocol.")
                     st.write("- **Routine Surveillance:** Low information staleness; standard 12-hour draw schedule sufficient.")
                     st.write("- **Sedation De-escalation:** Initiate sedation vacation and respiratory therapy mobilization protocol.")

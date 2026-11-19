@@ -8,7 +8,7 @@ from components.utils import (
 )
 
 def render_ward_view():
-    st.markdown("### 🏥 Central Nursing Station — 10-Bed Inpatient Surveillance")
+    st.markdown("### Central Nursing Station — 10-Bed Inpatient Surveillance")
     st.caption("Real-time clinical telemetry and targeted staleness overview across active ICU beds.")
 
     ward_df = get_ward_patients(n_beds=10)

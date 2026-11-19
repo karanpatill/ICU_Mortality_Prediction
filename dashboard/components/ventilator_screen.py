@@ -189,27 +189,24 @@ def render_ventilator_display(p_peak, peep, vt, rr, fio2, ie_ratio, p_mean, minu
         const height = canvas.clientHeight;
 
         function pawWave(phase) {{
-            // Pressure curve: inspiration rises to Ppeak, plateau, then passive drop to PEEP
             const p = phase % 1.0;
-            if (p < 0.33) {{ // Inspiration (1:2 I:E)
+            if (p < 0.33) {{
                 return Math.sin(p / 0.33 * Math.PI * 0.5);
-            }} else {{ // Expiration down to PEEP baseline
+            }} else {{
                 return Math.exp(-(p - 0.33) * 6.0);
             }}
         }}
 
         function flowWave(phase) {{
-            // Flow curve: rapid peak inspiratory flow, decelerating, then negative expiratory flow peak
             const p = phase % 1.0;
             if (p < 0.33) {{
-                return (1.0 - (p / 0.33)) * 0.9; // Decelerating inspiratory ramp
+                return (1.0 - (p / 0.33)) * 0.9;
             }} else {{
-                return -Math.exp(-(p - 0.33) * 7.0) * 0.85; // Expiratory flow spike
+                return -Math.exp(-(p - 0.33) * 7.0) * 0.85;
             }}
         }}
 
         function volWave(phase) {{
-            // Volume integration curve: rises during inspiration, decays during expiration
             const p = phase % 1.0;
             if (p < 0.33) {{
                 return (p / 0.33);
@@ -247,7 +244,7 @@ def render_ventilator_display(p_peak, peep, vt, rr, fio2, ie_ratio, p_mean, minu
             sweepX = (sweepX + 2.5) % width;
             ctx.clearRect(sweepX, 0, 16, height);
 
-            // Channel 1: Airway Pressure Paw (Yellow #eab308) - top 100px
+            // Channel 1: Airway Pressure Paw (Yellow #eab308)
             const pVal = pawWave(t);
             const pY = 90 - (pVal * 65);
             ctx.fillStyle = '#eab308';
@@ -255,7 +252,7 @@ def render_ventilator_display(p_peak, peep, vt, rr, fio2, ie_ratio, p_mean, minu
             ctx.shadowBlur = 6;
             ctx.fillRect(sweepX, pY, 2.5, 2.5);
 
-            // Channel 2: Flow Curve (Green #10b981) - mid 100-210px
+            // Channel 2: Flow Curve (Green #10b981)
             const fVal = flowWave(t);
             const fY = 160 - (fVal * 45);
             ctx.fillStyle = '#10b981';
@@ -263,7 +260,7 @@ def render_ventilator_display(p_peak, peep, vt, rr, fio2, ie_ratio, p_mean, minu
             ctx.shadowBlur = 6;
             ctx.fillRect(sweepX, fY, 2.5, 2.5);
 
-            // Channel 3: Volume Curve (Cyan #06b6d4) - bottom 210-310px
+            // Channel 3: Volume Curve (Cyan #06b6d4)
             const vVal = volWave(t);
             const vY = 300 - (vVal * 60);
             ctx.fillStyle = '#06b6d4';
@@ -308,12 +305,11 @@ def render_ventilator_screen():
     if "vent_abg_active" not in st.session_state:
         st.session_state.vent_abg_active = False
 
-    st.markdown("### 🫁 Hospital ICU Mechanical Ventilator Console")
-    st.caption("Active Bedside Pulmonary Simulator & Real-time Targeted Laboratory Staleness Surveillance")
+    st.markdown("### ICU Mechanical Ventilator Console")
+    st.caption("Active Bedside Pulmonary Simulator & Real-Time Targeted Laboratory Staleness Surveillance")
 
-    # Inpatient Selection Selector
     patient_opts = [
-        f"{p['clinical_case_id']} — Stay #{p['stay_id']} ({p['gender']}, {p['age']}y) &bull; {p['first_careunit']}"
+        f"{p['clinical_case_id']} — Stay #{p['stay_id']} ({p['gender']}, {p['age']}y) | {p['first_careunit']}"
         for p in patients
     ]
     sel_opt = st.selectbox(
@@ -332,7 +328,6 @@ def render_ventilator_screen():
     active_p = patients[st.session_state.vent_patient_idx]
     is_crit = (active_p["outcome_death"] == 1)
 
-    # Derive realistic ventilator parameters based on clinical status
     p_peak = 36 if is_crit else 22
     peep = 12 if is_crit else 6
     vt = 420 if is_crit else 480
@@ -354,7 +349,6 @@ def render_ventilator_screen():
 
     st.markdown("<div style='height: 16px;'></div>", unsafe_allow_html=True)
 
-    # Clinical AI Model Recalculation Engine
     p_copy = dict(active_p)
     delay = st.session_state.vent_delay_hours
 
@@ -396,26 +390,25 @@ def render_ventilator_screen():
         )
     with c_m4:
         st.metric(
-            "Model Inference Speed",
+            "Model Latency",
             "0.84 ms",
             help="LightGBM GBDT production latency per inpatient"
         )
 
     st.divider()
 
-    # Interactive Bedside Actions & Dynamic Aging
     col_act1, col_act2 = st.columns([1, 1])
 
     with col_act1:
-        st.markdown("#### 🧪 Bedside Lab Interventions")
-        st.caption("Test how refreshing stale arterial blood gases impacts model uncertainty in real time.")
+        st.markdown("#### Bedside Diagnostic Interventions")
+        st.caption("Evaluate how refreshing stale arterial blood gases impacts model uncertainty in real time.")
         
-        if st.button("💉 STAT ARTERIAL BLOOD GAS (ABG) DRAW", use_container_width=True):
+        if st.button("EXECUTE STAT ARTERIAL BLOOD GAS (ABG) DRAW", use_container_width=True):
             st.session_state.vent_abg_active = True
             st.rerun()
 
         if st.session_state.vent_abg_active:
-            st.success("✅ INTERVENTION EXECUTED: PaO2, PaCO2, pH & Lactate staleness refreshed to 0.2h!")
+            st.success("INTERVENTION EXECUTED: PaO2, PaCO2, pH & Lactate staleness refreshed to 0.2h.")
 
         if st.button("Reset Inpatient State", use_container_width=True):
             st.session_state.vent_delay_hours = 0.0
@@ -423,7 +416,7 @@ def render_ventilator_screen():
             st.rerun()
 
     with col_act2:
-        st.markdown("#### ⏱️ Dynamic Diagnostic Delay Simulation")
+        st.markdown("#### Diagnostic Delay Simulation")
         st.caption("Simulate clinical hours passing without lab testing to watch staleness decay elevate risk.")
         
         delay_val = st.slider(
@@ -434,8 +427,7 @@ def render_ventilator_screen():
             st.session_state.vent_delay_hours = delay_val
             st.rerun()
 
-    # Clean Dataframe of Inpatient Labs
-    st.markdown("#### 📋 Active Biomarkers & Observation Recency")
+    st.markdown("#### Active Biomarkers & Observation Recency")
     table_data = []
     for lab in LAB_NAMES:
         val = p_copy.get(f"{lab}_val", np.nan)
@@ -445,6 +437,6 @@ def render_ventilator_screen():
             "Measured Value": f"{val:.2f} {LAB_UNITS[lab]}" if not np.isnan(val) else "Not Drawn",
             "Reference Interval": f"{LAB_NORMAL[lab][0]} - {LAB_NORMAL[lab][1]} {LAB_UNITS[lab]}",
             "Observation Age": f"{h:.1f} Hours",
-            "Staleness Status": "STALE" if h >= 20.0 else ("MODERATE" if h >= 6.0 else "FRESH")
+            "Staleness Status": "STALE (>20h)" if h >= 20.0 else ("MODERATE (6-20h)" if h >= 6.0 else "FRESH (<6h)")
         })
     st.dataframe(pd.DataFrame(table_data), use_container_width=True, hide_index=True)

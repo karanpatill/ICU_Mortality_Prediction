@@ -14,7 +14,7 @@ def render_whatif_sim():
     schema = load_schema()
     ward_df = get_ward_patients(n_beds=10)
 
-    st.markdown("### 🧪 Counterfactual Intervention Simulation Lab")
+    st.markdown("### Counterfactual Intervention Simulation Lab")
     st.caption("Adjust clinical parameters and lab redraw schedules to see how interventions alter predicted mortality risk.")
 
     bed_options = [
@@ -32,7 +32,7 @@ def render_whatif_sim():
     overrides = {}
 
     with col_sim_left:
-        st.markdown("#### 🔬 Metabolic & Arterial Biomarkers")
+        st.markdown("#### Metabolic & Arterial Biomarkers")
 
         cur_lac = float(patient.get("lactate_val", 2.0))
         new_lac = st.slider("Arterial Lactate (mmol/L) [Ref: 0.5 - 2.0]", 0.5, 15.0, float(round(cur_lac, 1)), 0.1)
@@ -50,7 +50,7 @@ def render_whatif_sim():
             overrides["creatinine_val"] = new_cr
 
     with col_sim_right:
-        st.markdown("#### ⏱️ Targeted Observation Recency (Staleness)")
+        st.markdown("#### Targeted Observation Recency (Staleness)")
 
         cur_ls = float(patient.get("lactate_staleness", 24.0))
         new_ls = st.slider("Lactate Staleness (Hours) [Slide to 0 for fresh draw]", 0.0, 48.0, float(round(min(cur_ls, 48.0), 1)), 0.5)
@@ -88,8 +88,8 @@ def render_whatif_sim():
     )
 
     if delta < -3.0:
-        st.success("✅ INTERVENTION IMPACT: Refreshing stale diagnostic markers significantly reduces clinical uncertainty and predicted risk.")
+        st.success("INTERVENTION IMPACT: Refreshing stale diagnostic markers significantly reduces clinical uncertainty and predicted risk.")
     elif delta > 3.0:
-        st.error("⚠️ DETERIORATION WARNING: Simulated biomarker deterioration markedly elevates patient mortality risk.")
+        st.error("DETERIORATION WARNING: Simulated biomarker deterioration markedly elevates patient mortality risk.")
     else:
-        st.info("ℹ️ Minimal change in predicted risk with current adjustments.")
+        st.info("Minimal change in predicted risk with current adjustments.")

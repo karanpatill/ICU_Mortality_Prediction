@@ -129,7 +129,7 @@ def render_patient_monitor():
     schema = load_schema()
     ward_df = get_ward_patients(n_beds=10)
 
-    st.markdown("### 🔬 Inpatient Diagnostic Monitor")
+    st.markdown("### Inpatient Diagnostic Monitor")
     st.caption("Deep-dive biomarker recency, risk trajectory, and physiological assessment.")
 
     bed_options = [
@@ -159,7 +159,7 @@ def render_patient_monitor():
     with col_t:
         st.plotly_chart(render_staleness_trajectory_chart(patient), use_container_width=True)
 
-    st.markdown("#### 📋 Comprehensive 13-Biomarker Laboratory Profile")
+    st.markdown("#### Comprehensive 13-Biomarker Laboratory Profile")
     stale_summary = get_staleness_summary(patient)
     table_rows = []
     for lab, data in stale_summary.items():
