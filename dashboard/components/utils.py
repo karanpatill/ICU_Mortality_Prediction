@@ -12,9 +12,10 @@ from pathlib import Path
 # ─── Paths ────────────────────────────────────────────────────────────────────
 BASE_DIR = Path(__file__).resolve().parent.parent.parent  # D:\ICU_Mortality_Prediction
 
-# Auto-detect: use real MIMIC-IV data locally, synthetic demo data on deployment
 _REAL_DATA = BASE_DIR / "data" / "mimiciv" / "mimiciv_ventilated_cohort_24h.csv"
 _DEMO_DATA = BASE_DIR / "data" / "demo" / "demo_cohort.csv"
+_MIMIC_10_PATH = BASE_DIR / "data" / "mimic_10_patients.json"
+
 DATA_PATH = _REAL_DATA if _REAL_DATA.exists() else _DEMO_DATA
 IS_DEMO_MODE = not _REAL_DATA.exists()
 
@@ -49,21 +50,21 @@ LAB_NORMAL = {
 }
 
 # Staleness thresholds
-FRESH_MAX = 6.0       # < 6h  -> Fresh (green)
-MODERATE_MAX = 20.0   # 6-20h -> Moderate (yellow)
-# 20-48h -> Stale (red)
-# >= 48h -> Sentinel (gray)
+FRESH_MAX = 6.0       # < 6h  -> Fresh
+MODERATE_MAX = 20.0   # 6-20h -> Moderate
+# 20-48h -> Stale
+# >= 48h -> Sentinel
 
 # Risk thresholds
-RISK_STABLE   = 25    # < 25%  -> STABLE (green)
-RISK_WATCH    = 50    # 25-50% -> WATCH (yellow)
-RISK_ELEVATED = 70    # 50-70% -> ELEVATED (orange)
-# > 70%  -> CRITICAL (red)
+RISK_STABLE   = 25    # < 25%  -> STABLE
+RISK_WATCH    = 50    # 25-50% -> WATCH
+RISK_ELEVATED = 70    # 50-70% -> ELEVATED
+# > 70%  -> CRITICAL
 
 # ─── Data Loading ─────────────────────────────────────────────────────────────
 @st.cache_data(show_spinner=False)
 def load_raw_data():
-    """Load full MIMIC-IV cohort CSV."""
+    """Load full cohort dataset."""
     df = pd.read_csv(DATA_PATH)
     return df
 
@@ -78,102 +79,73 @@ def load_schema():
     with open(SCHEMA_PATH, "r") as f:
         return json.load(f)
 
-# ─── Feature Engineering (must match training pipeline EXACTLY) ───────────────
+@st.cache_data(show_spinner=False)
+def load_mimic_10_cohort():
+    """Load the verified 10 Real MIMIC-IV Clinical Patients."""
+    with open(_MIMIC_10_PATH, "r") as f:
+        return json.load(f)
+
+# ─── Feature Engineering ──────────────────────────────────────────────────────
 def encode_features(df: pd.DataFrame, feature_cols: list) -> pd.DataFrame:
-    """
-    Encode a DataFrame exactly as done during training:
-    1. gender M=1, F=0
-    2. get_dummies for first_careunit and admission_type
-    3. Reindex to training feature set, fill missing with 0
-    """
     df = df.copy()
-    df["gender"] = (df["gender"] == "M").astype(int)
+    if "gender" in df.columns:
+        df["gender"] = (df["gender"] == "M").astype(int)
     df = pd.get_dummies(df, columns=["first_careunit", "admission_type"], drop_first=False)
-    # Align to training feature set
     for col in feature_cols:
         if col not in df.columns:
             df[col] = 0
     return df[feature_cols].astype(float)
 
 def predict_risk(patient_df: pd.DataFrame, model, schema: dict) -> np.ndarray:
-    """
-    Given a raw patient DataFrame (with original columns), return mortality
-    risk probabilities as numpy array (values between 0 and 1).
-    """
     feature_cols = schema["features"]
     X = encode_features(patient_df, feature_cols)
     probs = model.predict_proba(X)[:, 1]
     return probs
 
-# ─── Staleness Classification ─────────────────────────────────────────────────
+# ─── Staleness & Risk Classifiers ─────────────────────────────────────────────
 def classify_staleness(hours: float) -> dict:
-    """
-    Returns color, label, and emoji for a given staleness value in hours.
-    """
     if hours >= SENTINEL_HOURS:
-        return {"label": "Sentinel", "color": "#6c757d", "bg": "#2d2d2d",
-                "emoji": "S", "text_color": "#adb5bd"}
+        return {"label": "Sentinel", "color": "#6e7681", "bg": "#1c2128", "text_color": "#8b949e"}
     elif hours >= MODERATE_MAX:
-        return {"label": "Stale", "color": "#dc3545", "bg": "#2d0a0d",
-                "emoji": "!", "text_color": "#ff6b7a"}
+        return {"label": "Stale", "color": "#ff1744", "bg": "#2b0a0d", "text_color": "#ff8097"}
     elif hours >= FRESH_MAX:
-        return {"label": "Moderate", "color": "#ffc107", "bg": "#2d2200",
-                "emoji": "~", "text_color": "#ffd966"}
+        return {"label": "Moderate", "color": "#ffb700", "bg": "#2b1c00", "text_color": "#ffe082"}
     else:
-        return {"label": "Fresh", "color": "#28a745", "bg": "#0a2d0f",
-                "emoji": "OK", "text_color": "#5cb85c"}
+        return {"label": "Fresh", "color": "#00e676", "bg": "#0d2b12", "text_color": "#69f0ae"}
 
 def classify_risk(risk_pct: float) -> dict:
-    """Returns color and label for a given risk percentage (0-100)."""
     if risk_pct >= RISK_ELEVATED:
-        return {"label": "CRITICAL", "color": "#dc3545", "badge_color": "#dc3545"}
+        return {"label": "CRITICAL", "color": "#ff1744"}
     elif risk_pct >= RISK_WATCH:
-        return {"label": "ELEVATED", "color": "#fd7e14", "badge_color": "#fd7e14"}
+        return {"label": "ELEVATED", "color": "#ff9100"}
     elif risk_pct >= RISK_STABLE:
-        return {"label": "WATCH", "color": "#ffc107", "badge_color": "#ffc107"}
+        return {"label": "WATCH", "color": "#ffd600"}
     else:
-        return {"label": "STABLE", "color": "#28a745", "badge_color": "#28a745"}
+        return {"label": "STABLE", "color": "#00e676"}
 
-# ─── Ward Patient Sampling ────────────────────────────────────────────────────
+# ─── 10 Real MIMIC-IV Ward Dataset ────────────────────────────────────────────
 @st.cache_data(show_spinner=False)
-def get_ward_patients(n_beds: int = 12):
+def get_ward_patients(n_beds: int = 10):
     """
-    Sample n_beds patients from the dataset with diverse risk/unit spread.
-    Returns raw DataFrame (no encoding) PLUS computed risk scores.
+    Returns the 10 Real MIMIC-IV Patients with pre-computed LightGBM risk scores.
     """
-    df_raw = load_raw_data()
+    pts = load_mimic_10_cohort()
+    df_pts = pd.DataFrame(pts)
     model = load_model()
     schema = load_schema()
-    feature_cols = schema["features"]
-
-    # Compute risk for all patients
-    X_all = encode_features(df_raw, feature_cols)
-    all_risks = model.predict_proba(X_all)[:, 1]
-    df_raw = df_raw.copy()
-    df_raw["risk_score"] = all_risks
-
-    # Sample diversely: 3 critical, 3 elevated, 3 watch, 3 stable
-    buckets = []
-    for lo, hi, n in [(0.70, 1.00, 3), (0.50, 0.70, 3), (0.25, 0.50, 3), (0.00, 0.25, 3)]:
-        bucket = df_raw[(df_raw["risk_score"] >= lo) & (df_raw["risk_score"] < hi)]
-        if len(bucket) >= n:
-            buckets.append(bucket.sample(n=n, random_state=42))
-        elif len(bucket) > 0:
-            buckets.append(bucket.sample(n=min(n, len(bucket)), random_state=42))
-
-    ward_df = pd.concat(buckets, ignore_index=True).head(n_beds)
-    ward_df["bed_id"] = [f"BED-{i+1:02d}" for i in range(len(ward_df))]
-    ward_df["risk_pct"] = (ward_df["risk_score"] * 100).round(1)
-    return ward_df
+    
+    X = encode_features(df_pts, schema["features"])
+    probs = model.predict_proba(X)[:, 1]
+    
+    df_pts["risk_score"] = probs
+    df_pts["risk_pct"] = (probs * 100.0).round(1)
+    df_pts["bed_id"] = [f"BED-{i+1:02d}" for i in range(len(df_pts))]
+    return df_pts
 
 # ─── Feature Importance ───────────────────────────────────────────────────────
 def get_feature_importance(model, schema: dict, top_n: int = 15) -> pd.DataFrame:
-    """
-    Get LightGBM split-based feature importance (top N).
-    Marks staleness features distinctly.
-    """
     feature_names = schema["features"]
-    importances = model.feature_importances_  # built-in LightGBM split importance
+    importances = model.feature_importances_
     df_imp = pd.DataFrame({
         "feature": feature_names,
         "importance": importances
@@ -187,9 +159,6 @@ def get_feature_importance(model, schema: dict, top_n: int = 15) -> pd.DataFrame
 
 # ─── Patient Staleness Summary ────────────────────────────────────────────────
 def get_staleness_summary(patient_row: pd.Series) -> dict:
-    """
-    Returns dict of lab -> staleness classification for a single patient.
-    """
     result = {}
     for lab in LAB_NAMES:
         col = f"{lab}_staleness"
@@ -206,10 +175,6 @@ def get_staleness_summary(patient_row: pd.Series) -> dict:
 
 # ─── What-If Prediction ───────────────────────────────────────────────────────
 def whatif_predict(base_patient: pd.Series, overrides: dict, model, schema: dict) -> float:
-    """
-    Given a base patient row and a dict of {col: new_value} overrides,
-    return new risk probability (0-1).
-    """
     patient_df = pd.DataFrame([base_patient.to_dict()])
     for col, val in overrides.items():
         patient_df[col] = val
