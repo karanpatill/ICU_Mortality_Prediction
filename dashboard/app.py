@@ -36,6 +36,7 @@ if CSS_PATH.exists():
 if str(DASHBOARD_DIR) not in sys.path:
     sys.path.insert(0, str(DASHBOARD_DIR))
 
+from components.clinical_dossier import render_clinical_dossier
 from components.ventilator_screen import render_ventilator_screen
 from components.ward_view import render_ward_view
 from components.patient_monitor import render_patient_monitor
@@ -67,8 +68,9 @@ with st.sidebar:
     """, unsafe_allow_html=True)
 
     nav_options = [
-        "BEDSIDE VENTILATOR CONSOLE",
-        "CENTRAL NURSING STATION (12 BEDS)",
+        "10 CLINICAL PATIENT DOSSIERS & PREDICTOR",
+        "BEDSIDE VENTILATOR & TELEMETRY CONSOLE",
+        "CENTRAL NURSING STATION (10 BEDS)",
         "INPATIENT DIAGNOSTIC MONITOR",
         "COUNTERFACTUAL INTERVENTION LAB",
         "CLINICAL SPECIFICATION & PAPER"
@@ -76,7 +78,7 @@ with st.sidebar:
 
     # Handle direct navigation jumps from ward view
     if st.session_state.get("go_to_monitor", False):
-        st.session_state.active_nav_index = 2
+        st.session_state.active_nav_index = 3
         st.session_state.go_to_monitor = False
 
     selected_nav = st.radio(
@@ -132,12 +134,14 @@ with st.sidebar:
 idx = st.session_state.active_nav_index
 
 if idx == 0:
-    render_ventilator_screen()
+    render_clinical_dossier()
 elif idx == 1:
-    render_ward_view()
+    render_ventilator_screen()
 elif idx == 2:
-    render_patient_monitor()
+    render_ward_view()
 elif idx == 3:
-    render_whatif_sim()
+    render_patient_monitor()
 elif idx == 4:
+    render_whatif_sim()
+elif idx == 5:
     render_documentation()
