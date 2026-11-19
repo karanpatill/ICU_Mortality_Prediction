@@ -1,250 +1,198 @@
-@import url('https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@400;600;700&family=JetBrains+Mono:wght@400;600;700&family=Inter:wght@400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap');
 
 :root {
-    --bg-base: #06090e;
-    --bg-surface: #0b1118;
-    --bg-panel: #101824;
-    --border-subtle: #1c2738;
-    --border-focus: #283952;
+    /* Modern Clinical Slate Palette (Epic Systems / Apple Health Pro) */
+    --bg-app: #0b0f17;
+    --bg-surface: #111726;
+    --bg-card: #151d2f;
+    --bg-card-hover: #1b253b;
+    --bg-card-subtle: #0e1422;
     
-    /* Medical Telemetry Standards */
-    --color-ecg: #00ff66;       /* Heart rate / ECG Lead II */
-    --color-spo2: #00e5ff;      /* Pulse oximetry / Pleth */
-    --color-art: #ff2a6d;       /* Arterial pressure */
-    --color-resp: #ffb700;      /* Ventilation / Paw */
-    --color-co2: #d680ff;       /* Capnography / EtCO2 */
+    --border-subtle: #1e293b;
+    --border-focus: #334155;
     
-    /* Clinical Alarm Hierarchy (IEC 60601-1-8) */
-    --alarm-high: #ff1744;
-    --alarm-med: #ff9100;
-    --alarm-low: #ffd600;
-    --alarm-normal: #00e676;
+    /* Clinical Severity Tokens */
+    --status-critical: #ef4444;
+    --status-critical-bg: rgba(239, 68, 68, 0.12);
+    --status-elevated: #f97316;
+    --status-elevated-bg: rgba(249, 115, 22, 0.12);
+    --status-watch: #eab308;
+    --status-watch-bg: rgba(234, 179, 8, 0.12);
+    --status-stable: #10b981;
+    --status-stable-bg: rgba(16, 185, 129, 0.12);
     
-    --text-primary: #edf2f7;
-    --text-muted: #718096;
-    --text-dim: #4a5568;
+    /* Vitals */
+    --vital-ecg: #10b981;
+    --vital-spo2: #06b6d4;
+    --vital-bp: #f43f5e;
+    --vital-resp: #f59e0b;
     
-    --font-mono: 'JetBrains Mono', 'Chakra Petch', monospace;
-    --font-display: 'Chakra Petch', sans-serif;
-    --font-sans: 'Inter', -apple-system, sans-serif;
+    --text-primary: #f8fafc;
+    --text-secondary: #94a3b8;
+    --text-muted: #64748b;
+    
+    --font-sans: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+    --font-mono: 'JetBrains Mono', monospace;
 }
 
-/* Base Body & App Container */
+/* Global Reset & Typography */
 .stApp {
-    background-color: var(--bg-base) !important;
+    background-color: var(--bg-app) !important;
     color: var(--text-primary) !important;
-    font-family: var(--font-sans);
+    font-family: var(--font-sans) !important;
+    -webkit-font-smoothing: antialiased;
 }
 
-/* Remove default Streamlit extra paddings */
 .block-container {
-    padding-top: 1.2rem !important;
-    padding-bottom: 2rem !important;
-    max-width: 98% !important;
+    padding-top: 1.5rem !important;
+    padding-bottom: 2.5rem !important;
+    max-width: 1400px !important;
 }
 
-/* Sidebar Customization */
+/* Sidebar Custom Styling */
 [data-testid="stSidebar"] {
     background-color: var(--bg-surface) !important;
     border-right: 1px solid var(--border-subtle) !important;
 }
 
-/* Master Header Console */
-.icu-console-header {
-    background: linear-gradient(180deg, #0f1722 0%, #080d14 100%);
+/* Clean Header Navbar */
+.app-header {
+    background: var(--bg-surface);
     border: 1px solid var(--border-subtle);
-    border-radius: 6px;
-    padding: 12px 20px;
-    margin-bottom: 14px;
+    border-radius: 12px;
+    padding: 16px 24px;
+    margin-bottom: 20px;
     display: flex;
     justify-content: space-between;
     align-items: center;
-    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05), 0 4px 16px rgba(0, 0, 0, 0.6);
 }
 
-.icu-title-group {
-    display: flex;
-    align-items: center;
-    gap: 14px;
-}
-
-.icu-pulse-dot {
-    width: 10px;
-    height: 10px;
-    background-color: var(--color-ecg);
-    border-radius: 50%;
-    box-shadow: 0 0 10px var(--color-ecg);
-    animation: pulse-ring 1.8s cubic-bezier(0.215, 0.61, 0.355, 1) infinite;
-}
-
-@keyframes pulse-ring {
-    0% { transform: scale(0.9); box-shadow: 0 0 0 0 rgba(0, 255, 102, 0.7); }
-    70% { transform: scale(1.1); box-shadow: 0 0 0 10px rgba(0, 255, 102, 0); }
-    100% { transform: scale(0.9); box-shadow: 0 0 0 0 rgba(0, 255, 102, 0); }
-}
-
-.icu-system-title {
-    font-family: var(--font-display);
+.brand-title {
     font-size: 1.35rem;
-    font-weight: 700;
-    letter-spacing: 2.5px;
+    font-weight: 800;
     color: #ffffff;
-    margin: 0;
-    text-transform: uppercase;
-}
-
-.icu-system-subtitle {
-    font-family: var(--font-mono);
-    font-size: 0.70rem;
-    color: var(--text-muted);
-    letter-spacing: 1px;
-    margin-top: 2px;
-}
-
-/* Telemetry Parameter Box (Mindray / Philips style) */
-.vital-tile {
-    background: #080d14;
-    border: 1px solid var(--border-subtle);
-    border-radius: 6px;
-    padding: 10px 14px;
-    position: relative;
-    overflow: hidden;
-    min-height: 95px;
-    box-shadow: inset 0 0 16px rgba(0, 0, 0, 0.5);
-}
-
-.vital-tile-label {
-    font-family: var(--font-mono);
-    font-size: 0.68rem;
-    font-weight: 700;
-    letter-spacing: 1.5px;
-    text-transform: uppercase;
+    letter-spacing: -0.5px;
     display: flex;
-    justify-content: space-between;
     align-items: center;
+    gap: 10px;
 }
 
-.vital-tile-value {
-    font-family: var(--font-display);
-    font-size: 2.6rem;
+.brand-badge {
+    background: rgba(6, 182, 212, 0.15);
+    color: #06b6d4;
+    border: 1px solid rgba(6, 182, 212, 0.3);
+    font-size: 0.70rem;
     font-weight: 700;
-    line-height: 1;
-    margin: 6px 0 2px 0;
-    letter-spacing: -1px;
-}
-
-.vital-tile-unit {
-    font-family: var(--font-mono);
-    font-size: 0.65rem;
-    color: var(--text-muted);
+    padding: 2px 8px;
+    border-radius: 6px;
+    text-transform: uppercase;
     letter-spacing: 0.5px;
 }
 
-/* Oscilloscope Raster Grid Container */
-.oscilloscope-frame {
-    background: #04070b;
-    border: 1px solid #142030;
-    border-radius: 6px;
-    position: relative;
-    background-image: 
-        linear-gradient(rgba(20, 32, 48, 0.35) 1px, transparent 1px),
-        linear-gradient(90deg, rgba(20, 32, 48, 0.35) 1px, transparent 1px);
-    background-size: 20px 20px;
-    box-shadow: inset 0 0 30px rgba(0, 0, 0, 0.85);
+.brand-sub {
+    font-size: 0.80rem;
+    color: var(--text-secondary);
+    margin-top: 2px;
 }
 
-/* Clinical Alarm Banners */
-.alarm-banner-critical {
-    background: rgba(255, 23, 68, 0.12);
-    border: 1px solid rgba(255, 23, 68, 0.5);
-    border-left: 5px solid var(--alarm-high);
-    border-radius: 4px;
-    padding: 8px 14px;
-    font-family: var(--font-mono);
-    font-size: 0.78rem;
-    color: #ff8097;
-    display: flex;
-    align-items: center;
-    gap: 12px;
-}
-
-.alarm-banner-advisory {
-    background: rgba(0, 229, 255, 0.08);
-    border: 1px solid rgba(0, 229, 255, 0.3);
-    border-left: 5px solid var(--color-spo2);
-    border-radius: 4px;
-    padding: 8px 14px;
-    font-family: var(--font-mono);
-    font-size: 0.78rem;
-    color: #80f0ff;
-    display: flex;
-    align-items: center;
-    gap: 12px;
-}
-
-/* Bed Grid Cards (Central Nursing Station) */
-.cns-bed-card {
-    background: #090e15;
+/* Standardized Clean Card Container */
+.clean-card {
+    background: var(--bg-card);
     border: 1px solid var(--border-subtle);
+    border-radius: 12px;
+    padding: 20px;
+    margin-bottom: 16px;
+    transition: all 0.2s ease;
+}
+
+.clean-card:hover {
+    border-color: var(--border-focus);
+}
+
+.card-title {
+    font-size: 0.85rem;
+    font-weight: 700;
+    color: var(--text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 12px;
+}
+
+/* Modern Lab Grid Item */
+.lab-item {
+    background: var(--bg-card-subtle);
+    border: 1px solid var(--border-subtle);
+    border-radius: 8px;
+    padding: 10px 14px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 8px;
+}
+
+.lab-name {
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+.lab-val {
+    font-family: var(--font-mono);
+    font-size: 0.95rem;
+    font-weight: 700;
+    color: #38bdf8;
+}
+
+.status-badge {
+    font-family: var(--font-mono);
+    font-size: 0.68rem;
+    font-weight: 700;
+    padding: 3px 8px;
     border-radius: 6px;
-    padding: 12px;
-    position: relative;
-    transition: all 0.2s ease-in-out;
+    display: inline-block;
 }
 
-.cns-bed-card:hover {
-    border-color: #3b5375;
-    transform: translateY(-2px);
-    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.6);
-}
-
-.cns-bed-card.alarm-critical {
-    border-top: 3px solid var(--alarm-high);
-}
-
-.cns-bed-card.alarm-elevated {
-    border-top: 3px solid var(--alarm-med);
-}
-
-.cns-bed-card.alarm-watch {
-    border-top: 3px solid var(--alarm-low);
-}
-
-.cns-bed-card.alarm-stable {
-    border-top: 3px solid var(--alarm-normal);
-}
-
-/* Buttons in Medical Terminal Theme */
+/* Primary Execution Button */
 .stButton > button {
-    background: #111a26 !important;
-    border: 1px solid #25374f !important;
-    color: #cbd5e1 !important;
-    font-family: var(--font-mono) !important;
-    font-size: 0.74rem !important;
-    letter-spacing: 1px !important;
-    text-transform: uppercase !important;
-    border-radius: 4px !important;
-    padding: 6px 14px !important;
-    transition: all 0.15s ease !important;
+    background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%) !important;
+    color: #ffffff !important;
+    border: 1px solid #38bdf8 !important;
+    font-family: var(--font-sans) !important;
+    font-size: 0.88rem !important;
+    font-weight: 700 !important;
+    border-radius: 8px !important;
+    padding: 10px 24px !important;
+    box-shadow: 0 4px 14px rgba(2, 132, 199, 0.25) !important;
+    transition: all 0.2s ease !important;
 }
 
 .stButton > button:hover {
-    background: #1a2738 !important;
-    border-color: var(--color-spo2) !important;
-    color: #ffffff !important;
-    box-shadow: 0 0 12px rgba(0, 229, 255, 0.25) !important;
+    background: linear-gradient(135deg, #0369a1 0%, #075985 100%) !important;
+    box-shadow: 0 6px 20px rgba(2, 132, 199, 0.4) !important;
+    transform: translateY(-1px) !important;
 }
 
-/* Clean Metrics Overrides */
-[data-testid="stMetricValue"] {
-    font-family: var(--font-display) !important;
-    color: #ffffff !important;
+/* Clean Form Widgets */
+.stSelectbox > div > div {
+    background-color: var(--bg-card) !important;
+    border-color: var(--border-subtle) !important;
+    color: var(--text-primary) !important;
+    border-radius: 8px !important;
 }
 
-[data-testid="stMetricLabel"] {
-    font-family: var(--font-mono) !important;
-    font-size: 0.72rem !important;
-    text-transform: uppercase !important;
-    letter-spacing: 1px !important;
-    color: var(--text-muted) !important;
+/* Clean Radio Navigation */
+.stRadio > div {
+    gap: 8px;
+}
+
+.stRadio [role="radiogroup"] > label {
+    background: var(--bg-card-subtle);
+    border: 1px solid var(--border-subtle);
+    padding: 8px 14px;
+    border-radius: 8px;
+    transition: all 0.15s ease;
+}
+
+.stRadio [role="radiogroup"] > label:hover {
+    border-color: #38bdf8;
 }
