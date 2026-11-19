@@ -1,4 +1,4 @@
-# ventilator_screen.py - High-Fidelity ICU Bedside Ventilator & 10 Real MIMIC Patient Simulator
+# ventilator_screen.py - High-Precision Hospital ICU Ventilator Console (Drager / Hamilton Medical Inspired)
 # AURA-ICU: Adaptive Uncertainty-aware Risk Assessment for Intensive Care Units
 
 import streamlit as st
@@ -11,37 +11,170 @@ from components.utils import (
     LAB_NAMES, LAB_DISPLAY, LAB_UNITS, LAB_NORMAL, SENTINEL_HOURS
 )
 
-def render_oscilloscope(hr: int, spo2: int, p_peak: int, peep: int):
+def render_ventilator_display(p_peak, peep, vt, rr, fio2, ie_ratio, p_mean, minute_vent):
     """
-    Renders a 60fps hospital oscilloscope monitor with ECG Lead II,
-    Pleth SpO2, and Ventilator Airway Pressure (Paw) traces.
+    Renders an authentic, hospital-grade Drager / Hamilton Medical Ventilator Touchscreen Console
+    with 3 synchronized real-time clinical curves:
+    1. Pressure-Time Curve (Paw cmH2O) - Yellow
+    2. Flow-Time Curve (Flow L/min) - Green
+    3. Volume-Time Curve (V mL) - Cyan
+    And clinical ventilator digital monitors.
     """
     html_code = f"""
     <!DOCTYPE html>
     <html>
     <head>
     <style>
+        * {{ box-sizing: border-box; }}
         body {{
             margin: 0;
             padding: 0;
-            background: #04070b;
+            background: #0d131f;
+            color: #f8fafc;
+            font-family: 'JetBrains Mono', -apple-system, monospace;
+            user-select: none;
             overflow: hidden;
-            font-family: 'JetBrains Mono', 'Segoe UI', monospace;
         }}
-        #scope {{
+        .vent-bezel {{
+            background: linear-gradient(180deg, #1e293b 0%, #0f172a 100%);
+            border: 2px solid #334155;
+            border-radius: 12px;
+            padding: 12px 16px;
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+        }}
+        .vent-top-status {{
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid #1e293b;
+            padding-bottom: 8px;
+            margin-bottom: 10px;
+        }}
+        .mode-badge {{
+            background: #0284c7;
+            color: #ffffff;
+            font-weight: 800;
+            font-size: 0.85rem;
+            padding: 4px 12px;
+            border-radius: 4px;
+            letter-spacing: 1px;
+        }}
+        .grid-layout {{
+            display: grid;
+            grid-template-columns: 3fr 1fr;
+            gap: 12px;
+        }}
+        #waveforms {{
+            background: #060911;
+            border: 1px solid #1e293b;
+            border-radius: 8px;
             width: 100%;
-            height: 245px;
+            height: 320px;
             display: block;
-            background: #03060a;
+        }}
+        .sidebar-vitals {{
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }}
+        .vital-box {{
+            background: #090e17;
+            border: 1px solid #1e293b;
+            border-radius: 6px;
+            padding: 8px 12px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }}
+        .vital-label {{
+            font-size: 0.72rem;
+            color: #94a3b8;
+            font-weight: 700;
+            text-transform: uppercase;
+        }}
+        .vital-num {{
+            font-size: 1.6rem;
+            font-weight: 800;
+            line-height: 1;
+        }}
+        .vital-unit {{
+            font-size: 0.65rem;
+            color: #64748b;
         }}
     </style>
     </head>
     <body>
-    <canvas id="scope"></canvas>
+    <div class="vent-bezel">
+        <div class="vent-top-status">
+            <div style="display: flex; align-items: center; gap: 12px;">
+                <span class="mode-badge">PRVC / AC</span>
+                <span style="font-size: 0.8rem; font-weight: 700; color: #38bdf8;">INVASIVE MECHANICAL VENTILATION</span>
+                <span style="font-size: 0.75rem; color: #10b981; font-weight: 600;">ACTIVE INSPIRATION</span>
+            </div>
+            <div style="font-size: 0.75rem; color: #94a3b8;">
+                HAMILTON / DRÄGER CLASS-IV MEDICAL INTERFACE
+            </div>
+        </div>
+
+        <div class="grid-layout">
+            <canvas id="waveforms"></canvas>
+            
+            <div class="sidebar-vitals">
+                <div class="vital-box" style="border-left: 4px solid #eab308;">
+                    <div>
+                        <div class="vital-label">P_PEAK</div>
+                        <div class="vital-unit">cmH2O</div>
+                    </div>
+                    <div class="vital-num" style="color: #eab308;">{p_peak}</div>
+                </div>
+
+                <div class="vital-box" style="border-left: 4px solid #eab308;">
+                    <div>
+                        <div class="vital-label">PEEP</div>
+                        <div class="vital-unit">cmH2O</div>
+                    </div>
+                    <div class="vital-num" style="color: #eab308;">{peep}</div>
+                </div>
+
+                <div class="vital-box" style="border-left: 4px solid #10b981;">
+                    <div>
+                        <div class="vital-label">V_TE</div>
+                        <div class="vital-unit">Tidal Vol (mL)</div>
+                    </div>
+                    <div class="vital-num" style="color: #10b981;">{vt}</div>
+                </div>
+
+                <div class="vital-box" style="border-left: 4px solid #06b6d4;">
+                    <div>
+                        <div class="vital-label">RATE (f)</div>
+                        <div class="vital-unit">breaths/min</div>
+                    </div>
+                    <div class="vital-num" style="color: #06b6d4;">{rr}</div>
+                </div>
+
+                <div class="vital-box" style="border-left: 4px solid #f43f5e;">
+                    <div>
+                        <div class="vital-label">FiO2</div>
+                        <div class="vital-unit">Oxygen %</div>
+                    </div>
+                    <div class="vital-num" style="color: #f43f5e;">{fio2}%</div>
+                </div>
+
+                <div class="vital-box" style="border-left: 4px solid #a855f7;">
+                    <div>
+                        <div class="vital-label">MV (Exp)</div>
+                        <div class="vital-unit">L/min</div>
+                    </div>
+                    <div class="vital-num" style="color: #a855f7;">{minute_vent}</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <script>
-        const canvas = document.getElementById('scope');
+        const canvas = document.getElementById('waveforms');
         const ctx = canvas.getContext('2d');
-        
+
         function resize() {{
             canvas.width = canvas.clientWidth * window.devicePixelRatio;
             canvas.height = canvas.clientHeight * window.devicePixelRatio;
@@ -51,56 +184,51 @@ def render_oscilloscope(hr: int, spo2: int, p_peak: int, peep: int):
         resize();
 
         let sweepX = 0;
-        const hr = {hr};
-        const spo2 = {spo2};
-        const pPeak = {p_peak};
-        const peep = {peep};
-        
         let t = 0;
         const width = canvas.clientWidth;
         const height = canvas.clientHeight;
 
-        function ecgFunc(phase) {{
+        function pawWave(phase) {{
+            // Pressure curve: inspiration rises to Ppeak, plateau, then passive drop to PEEP
             const p = phase % 1.0;
-            if (p > 0.15 && p < 0.22) return Math.sin((p - 0.15) / 0.07 * Math.PI) * 0.18;
-            if (p > 0.32 && p < 0.34) return -0.15;
-            if (p >= 0.34 && p < 0.38) return 1.0;
-            if (p >= 0.38 && p < 0.41) return -0.35;
-            if (p > 0.48 && p < 0.65) return Math.sin((p - 0.48) / 0.17 * Math.PI) * 0.28;
-            return 0.0;
-        }}
-
-        function plethFunc(phase) {{
-            const p = phase % 1.0;
-            if (p < 0.25) {{
-                return Math.sin(p / 0.25 * Math.PI * 0.5);
-            }} else if (p < 0.4) {{
-                return Math.cos((p - 0.25) / 0.15 * Math.PI * 0.5) * 0.4 + 0.6;
-            }} else {{
-                return Math.exp(-(p - 0.4) * 4) * 0.6;
+            if (p < 0.33) {{ // Inspiration (1:2 I:E)
+                return Math.sin(p / 0.33 * Math.PI * 0.5);
+            }} else {{ // Expiration down to PEEP baseline
+                return Math.exp(-(p - 0.33) * 6.0);
             }}
         }}
 
-        function pawFunc(phase) {{
+        function flowWave(phase) {{
+            // Flow curve: rapid peak inspiratory flow, decelerating, then negative expiratory flow peak
             const p = phase % 1.0;
             if (p < 0.33) {{
-                return Math.sin(p / 0.33 * Math.PI * 0.5);
+                return (1.0 - (p / 0.33)) * 0.9; // Decelerating inspiratory ramp
             }} else {{
-                return Math.exp(-(p - 0.33) * 6);
+                return -Math.exp(-(p - 0.33) * 7.0) * 0.85; // Expiratory flow spike
+            }}
+        }}
+
+        function volWave(phase) {{
+            // Volume integration curve: rises during inspiration, decays during expiration
+            const p = phase % 1.0;
+            if (p < 0.33) {{
+                return (p / 0.33);
+            }} else {{
+                return Math.exp(-(p - 0.33) * 5.5);
             }}
         }}
 
         function drawGrid() {{
-            ctx.strokeStyle = 'rgba(20, 35, 52, 0.4)';
+            ctx.strokeStyle = 'rgba(30, 41, 59, 0.4)';
             ctx.lineWidth = 1;
-            const gridSz = 20;
-            for (let x = 0; x < width; x += gridSz) {{
+            const sz = 24;
+            for (let x = 0; x < width; x += sz) {{
                 ctx.beginPath();
                 ctx.moveTo(x, 0);
                 ctx.lineTo(x, height);
                 ctx.stroke();
             }}
-            for (let y = 0; y < height; y += gridSz) {{
+            for (let y = 0; y < height; y += sz) {{
                 ctx.beginPath();
                 ctx.moveTo(0, y);
                 ctx.lineTo(width, y);
@@ -108,65 +236,64 @@ def render_oscilloscope(hr: int, spo2: int, p_peak: int, peep: int):
             }}
         }}
 
-        function animate() {{
-            ctx.fillStyle = 'rgba(3, 6, 10, 0.12)';
+        function render() {{
+            ctx.fillStyle = 'rgba(6, 9, 17, 0.15)';
             ctx.fillRect(0, 0, width, height);
             drawGrid();
 
-            const speed = (hr / 60) * 1.8;
-            t += 0.016 * speed;
-            
-            const sweepStep = 2.2;
-            sweepX = (sweepX + sweepStep) % width;
-            ctx.clearRect(sweepX, 0, 14, height);
+            const ventSpeed = ({rr} / 60) * 0.32;
+            t += 0.018 * ventSpeed;
 
-            // Channel 1: ECG Lead II (Green)
-            const ecgVal = ecgFunc(t);
-            const ecgY = 46 - (ecgVal * 30);
-            ctx.fillStyle = '#00ff66';
-            ctx.shadowColor = '#00ff66';
+            sweepX = (sweepX + 2.5) % width;
+            ctx.clearRect(sweepX, 0, 16, height);
+
+            // Channel 1: Airway Pressure Paw (Yellow #eab308) - top 100px
+            const pVal = pawWave(t);
+            const pY = 90 - (pVal * 65);
+            ctx.fillStyle = '#eab308';
+            ctx.shadowColor = '#eab308';
             ctx.shadowBlur = 6;
-            ctx.fillRect(sweepX, ecgY, 2, 2);
+            ctx.fillRect(sweepX, pY, 2.5, 2.5);
 
-            // Channel 2: SpO2 Pleth (Cyan)
-            const plethVal = plethFunc(t * 1.0);
-            const plethY = 125 - (plethVal * 26);
-            ctx.fillStyle = '#00e5ff';
-            ctx.shadowColor = '#00e5ff';
+            // Channel 2: Flow Curve (Green #10b981) - mid 100-210px
+            const fVal = flowWave(t);
+            const fY = 160 - (fVal * 45);
+            ctx.fillStyle = '#10b981';
+            ctx.shadowColor = '#10b981';
             ctx.shadowBlur = 6;
-            ctx.fillRect(sweepX, plethY, 2, 2);
+            ctx.fillRect(sweepX, fY, 2.5, 2.5);
 
-            // Channel 3: Ventilator Paw (Amber)
-            const pawVal = pawFunc(t * 0.25);
-            const pawY = 215 - (pawVal * 32);
-            ctx.fillStyle = '#ffb700';
-            ctx.shadowColor = '#ffb700';
+            // Channel 3: Volume Curve (Cyan #06b6d4) - bottom 210-310px
+            const vVal = volWave(t);
+            const vY = 300 - (vVal * 60);
+            ctx.fillStyle = '#06b6d4';
+            ctx.shadowColor = '#06b6d4';
             ctx.shadowBlur = 6;
-            ctx.fillRect(sweepX, pawY, 2, 2);
+            ctx.fillRect(sweepX, vY, 2.5, 2.5);
 
-            // Channel Labels
+            // Labels
             ctx.shadowBlur = 0;
             ctx.font = '10px monospace';
-            ctx.fillStyle = '#00ff66';
-            ctx.fillText('ECG LEAD II  II x1.0', 12, 18);
-            
-            ctx.fillStyle = '#00e5ff';
-            ctx.fillText('PLETH  SPO2 PULSE', 12, 94);
-            
-            ctx.fillStyle = '#ffb700';
-            ctx.fillText('PAW (cmH2O)  VENT FLOW', 12, 175);
+            ctx.fillStyle = '#eab308';
+            ctx.fillText('Paw (cmH2O)  PRESSURE', 12, 22);
 
-            requestAnimationFrame(animate);
+            ctx.fillStyle = '#10b981';
+            ctx.fillText('Flow (L/min)  FLOW-TIME', 12, 120);
+
+            ctx.fillStyle = '#06b6d4';
+            ctx.fillText('V (mL)  VOLUME INTEGRATION', 12, 230);
+
+            requestAnimationFrame(render);
         }}
-        
-        ctx.fillStyle = '#03060a';
+
+        ctx.fillStyle = '#060911';
         ctx.fillRect(0, 0, width, height);
-        animate();
+        render();
     </script>
     </body>
     </html>
     """
-    components.html(html_code, height=260, scrolling=False)
+    components.html(html_code, height=360, scrolling=False)
 
 
 def render_ventilator_screen():
@@ -174,127 +301,69 @@ def render_ventilator_screen():
     schema = load_schema()
     patients = load_mimic_10_cohort()
 
-    if "selected_mimic_idx" not in st.session_state:
-        st.session_state.selected_mimic_idx = 0
-    if "staleness_time_offset" not in st.session_state:
-        st.session_state.staleness_time_offset = 0.0
-    if "stat_abg_active" not in st.session_state:
-        st.session_state.stat_abg_active = False
+    if "vent_patient_idx" not in st.session_state:
+        st.session_state.vent_patient_idx = 0
+    if "vent_delay_hours" not in st.session_state:
+        st.session_state.vent_delay_hours = 0.0
+    if "vent_abg_active" not in st.session_state:
+        st.session_state.vent_abg_active = False
 
-    # Top Header
-    st.markdown("""
-    <div class="icu-console-header">
-        <div class="icu-title-group">
-            <div class="icu-pulse-dot"></div>
-            <div>
-                <div class="icu-system-title">AURA-ICU BEDSIDE VENTILATOR & TELEMETRY CONSOLE</div>
-                <div class="icu-system-subtitle">REAL MIMIC-IV ICU PATIENT COHORT &bull; TARGETED LABORATORY STALENESS ENGINE</div>
-            </div>
-        </div>
-        <div style="display:flex;gap:18px;align-items:center;">
-            <div style="text-align:right;">
-                <div style="font-family:var(--font-mono);font-size:0.65rem;color:var(--text-muted);">EHR SOURCE DATABASE</div>
-                <div style="font-family:var(--font-mono);font-size:0.75rem;color:#00e5ff;font-weight:700;">MIMIC-IV v3.1 (BOSTON, MA)</div>
-            </div>
-            <div style="text-align:right;">
-                <div style="font-family:var(--font-mono);font-size:0.65rem;color:var(--text-muted);">INFERENCE LATENCY</div>
-                <div style="font-family:var(--font-mono);font-size:0.75rem;color:#00ff66;font-weight:700;">0.84 ms &bull; GBDT</div>
-            </div>
-        </div>
-    </div>
-    """, unsafe_allow_html=True)
+    st.markdown("### 🫁 Hospital ICU Mechanical Ventilator Console")
+    st.caption("Active Bedside Pulmonary Simulator & Real-time Targeted Laboratory Staleness Surveillance")
 
-    # 10 Real Patient Selector
-    st.markdown("""
-    <div style="font-family:var(--font-mono);font-size:0.68rem;color:#718096;letter-spacing:1.5px;text-transform:uppercase;margin-bottom:6px;">
-        ACTIVE INPATIENT SELECTOR (10 VERIFIED MIMIC-IV COHORT CASES)
-    </div>
-    """, unsafe_allow_html=True)
-
-    patient_labels = []
-    for idx, p in enumerate(patients):
-        status = "ACTUAL DEATH" if p["outcome_death"] == 1 else "DISCHARGED ALIVE"
-        lbl = f"{p['clinical_case_id']} | Stay #{p['stay_id']} | {p['gender']}/{p['age']}y | {p['first_careunit'][:20]} | Ground Truth: {status}"
-        patient_labels.append(lbl)
-
-    selected_lbl = st.selectbox(
-        "Choose Inpatient",
-        patient_labels,
-        index=st.session_state.selected_mimic_idx,
+    # Inpatient Selection Selector
+    patient_opts = [
+        f"{p['clinical_case_id']} — Stay #{p['stay_id']} ({p['gender']}, {p['age']}y) &bull; {p['first_careunit']}"
+        for p in patients
+    ]
+    sel_opt = st.selectbox(
+        "Select Ventilated Inpatient Monitor",
+        patient_opts,
+        index=st.session_state.vent_patient_idx,
         label_visibility="collapsed"
     )
-    new_idx = patient_labels.index(selected_lbl)
-    if new_idx != st.session_state.selected_mimic_idx:
-        st.session_state.selected_mimic_idx = new_idx
-        st.session_state.staleness_time_offset = 0.0
-        st.session_state.stat_abg_active = False
+    new_idx = patient_opts.index(sel_opt)
+    if new_idx != st.session_state.vent_patient_idx:
+        st.session_state.vent_patient_idx = new_idx
+        st.session_state.vent_delay_hours = 0.0
+        st.session_state.vent_abg_active = False
         st.rerun()
 
-    active_p = patients[st.session_state.selected_mimic_idx]
-    actual_outcome = "EXPIRED" if active_p["outcome_death"] == 1 else "SURVIVED"
-    actual_color = "#ff1744" if actual_outcome == "EXPIRED" else "#00e676"
+    active_p = patients[st.session_state.vent_patient_idx]
+    is_crit = (active_p["outcome_death"] == 1)
 
-    # Derive realistic dynamic ventilator vitals based on patient severity
-    is_crit = active_p["outcome_death"] == 1
-    hr = 114 if is_crit else (82 + (active_p["age"] % 15))
-    spo2 = 91 if is_crit else (97 - (active_p["age"] % 3))
-    p_peak = 32 if is_crit else 20
-    peep = 10 if is_crit else 6
-    bp_sys = 92 if is_crit else 126
-    bp_dia = 56 if is_crit else 78
+    # Derive realistic ventilator parameters based on clinical status
+    p_peak = 36 if is_crit else 22
+    peep = 12 if is_crit else 6
+    vt = 420 if is_crit else 480
+    rr = 22 if is_crit else 14
+    fio2 = 75 if is_crit else 40
+    minute_vent = round((vt * rr) / 1000.0, 1)
 
-    # Primary Oscilloscope & Vitals
-    col_wave, col_vitals = st.columns([2.5, 1.2])
+    # Render Physical Touchscreen Console
+    render_ventilator_display(
+        p_peak=p_peak,
+        peep=peep,
+        vt=vt,
+        rr=rr,
+        fio2=fio2,
+        ie_ratio="1:2",
+        p_mean=int(peep + (p_peak - peep) / 3),
+        minute_vent=minute_vent
+    )
 
-    with col_wave:
-        st.markdown('<div class="oscilloscope-frame">', unsafe_allow_html=True)
-        render_oscilloscope(hr=hr, spo2=spo2, p_peak=p_peak, peep=peep)
-        st.markdown('</div>', unsafe_allow_html=True)
+    st.markdown("<div style='height: 16px;'></div>", unsafe_allow_html=True)
 
-    with col_vitals:
-        v1, v2 = st.columns(2)
-        with v1:
-            st.markdown(f"""
-            <div class="vital-tile" style="border-left: 3px solid #00ff66;">
-                <div class="vital-tile-label" style="color: #00ff66;">HR <span style="font-size:0.55rem;color:#718096;">BPM</span></div>
-                <div class="vital-tile-value" style="color: #00ff66;">{hr}</div>
-                <div class="vital-tile-unit">SINUS RHYTHM</div>
-            </div>
-            <div style='height:8px'></div>
-            <div class="vital-tile" style="border-left: 3px solid #ff2a6d;">
-                <div class="vital-tile-label" style="color: #ff2a6d;">ABP <span style="font-size:0.55rem;color:#718096;">mmHg</span></div>
-                <div class="vital-tile-value" style="color: #ff2a6d;font-size:1.8rem;margin-top:10px;">
-                    {bp_sys}/{bp_dia}
-                </div>
-                <div class="vital-tile-unit">MAP: {int((bp_sys + 2*bp_dia)/3)} mmHg</div>
-            </div>
-            """, unsafe_allow_html=True)
-        with v2:
-            st.markdown(f"""
-            <div class="vital-tile" style="border-left: 3px solid #00e5ff;">
-                <div class="vital-tile-label" style="color: #00e5ff;">SpO2 <span style="font-size:0.55rem;color:#718096;">%</span></div>
-                <div class="vital-tile-value" style="color: #00e5ff;">{spo2}</div>
-                <div class="vital-tile-unit">PLETH INDEX: HIGH</div>
-            </div>
-            <div style='height:8px'></div>
-            <div class="vital-tile" style="border-left: 3px solid #ffb700;">
-                <div class="vital-tile-label" style="color: #ffb700;">P_PEAK <span style="font-size:0.55rem;color:#718096;">cmH2O</span></div>
-                <div class="vital-tile-value" style="color: #ffb700;">{p_peak}</div>
-                <div class="vital-tile-unit">PEEP: {peep} &bull; IMV: {int(active_p['vent_duration_hours'])}h</div>
-            </div>
-            """, unsafe_allow_html=True)
-
-    # Compute Real-time Model Prediction with Dynamic Staleness Offset
+    # Clinical AI Model Recalculation Engine
     p_copy = dict(active_p)
-    offset = st.session_state.staleness_time_offset
+    delay = st.session_state.vent_delay_hours
 
-    # Apply offset or ABG intervention
     for lab in LAB_NAMES:
         col_s = f"{lab}_staleness"
         base_s = float(p_copy.get(col_s, 48.0))
-        p_copy[col_s] = min(48.0, base_s + offset)
+        p_copy[col_s] = min(48.0, base_s + delay)
 
-    if st.session_state.stat_abg_active:
+    if st.session_state.vent_abg_active:
         p_copy["pao2_staleness"] = 0.2
         p_copy["paco2_staleness"] = 0.2
         p_copy["ph_staleness"] = 0.2
@@ -302,113 +371,80 @@ def render_ventilator_screen():
 
     X_in = encode_features(pd.DataFrame([p_copy]), schema["features"])
     predicted_risk_pct = float(model.predict_proba(X_in)[:, 1][0] * 100.0)
+    actual_outcome = "EXPIRED" if active_p["outcome_death"] == 1 else "SURVIVED"
 
-    # Lower Panel: Prediction & Staleness Matrix
-    st.markdown("<div style='height:12px'></div>", unsafe_allow_html=True)
-    c_risk, c_matrix, c_intervene = st.columns([1.1, 1.6, 1.3])
-
-    with c_risk:
-        risk_color = "#ff1744" if predicted_risk_pct >= 70 else ("#ff9100" if predicted_risk_pct >= 50 else ("#ffd600" if predicted_risk_pct >= 25 else "#00e676"))
-        status_label = "CRITICAL DETERIORATION" if predicted_risk_pct >= 70 else ("ELEVATED RISK" if predicted_risk_pct >= 50 else ("WATCH REQUIRED" if predicted_risk_pct >= 25 else "PHYSIOLOGICALLY STABLE"))
-        
-        st.markdown(f"""
-        <div style="background:#090e15;border:1px solid #1c2738;border-top:4px solid {risk_color};border-radius:6px;padding:16px;text-align:center;">
-            <div style="font-family:var(--font-mono);font-size:0.65rem;color:#718096;letter-spacing:1.5px;text-transform:uppercase;">
-                AI PREDICTED MORTALITY
-            </div>
-            <div style="font-family:var(--font-display);font-size:3.2rem;font-weight:700;color:{risk_color};line-height:1;margin:8px 0 2px 0;">
-                {predicted_risk_pct:.1f}<span style="font-size:1.6rem;">%</span>
-            </div>
-            <div style="font-family:var(--font-mono);font-size:0.70rem;font-weight:700;color:{risk_color};background:rgba(255,255,255,0.04);padding:4px 8px;border-radius:3px;display:inline-block;letter-spacing:1px;">
-                {status_label}
-            </div>
-            <div style="margin-top:12px;padding-top:8px;border-top:1px solid #142030;display:flex;justify-content:space-between;align-items:center;font-family:var(--font-mono);font-size:0.68rem;">
-                <span style="color:#718096;">MIMIC GROUND TRUTH:</span>
-                <span style="color:{actual_color};font-weight:700;">{actual_outcome}</span>
-            </div>
-        </div>
-        """, unsafe_allow_html=True)
-
-    with c_matrix:
-        st.markdown("""
-        <div style="font-family:var(--font-mono);font-size:0.68rem;color:#718096;letter-spacing:1.5px;text-transform:uppercase;margin-bottom:8px;">
-            TARGETED BIOMARKER STALENESS MATRIX
-        </div>
-        """, unsafe_allow_html=True)
-
-        key_labs = ["lactate", "pao2", "ph", "creatinine", "bun", "platelets"]
-        grid_rows = ""
-        for lab in key_labs:
-            h = float(p_copy.get(f"{lab}_staleness", 48.0))
-            val = float(p_copy.get(f"{lab}_val", 0.0))
-            unit = LAB_UNITS[lab]
-            
-            if h >= 24.0:
-                s_color = "#ff1744"
-                s_badge = "STALE"
-            elif h >= 12.0:
-                s_color = "#ffb700"
-                s_badge = "MODERATE"
-            else:
-                s_color = "#00e676"
-                s_badge = "FRESH"
-
-            bar_width = min(100, int((h / 48.0) * 100))
-            val_txt = f"{val:.2f} {unit}" if not np.isnan(val) else "NOT DRAWN"
-            grid_rows += f"""
-            <div style="display:flex;align-items:center;justify-content:space-between;padding:5px 0;border-bottom:1px solid #142030;font-family:var(--font-mono);font-size:0.72rem;">
-                <span style="color:#edf2f7;width:80px;font-weight:600;">{LAB_DISPLAY[lab]}</span>
-                <span style="color:#00e5ff;width:75px;">{val_txt}</span>
-                <div style="flex:1;background:#142030;height:6px;border-radius:3px;margin:0 12px;overflow:hidden;">
-                    <div style="width:{bar_width}%;height:100%;background:{s_color};"></div>
-                </div>
-                <span style="color:{s_color};font-size:0.62rem;font-weight:700;width:95px;text-align:right;">
-                    {h:.1f}h ({s_badge})
-                </span>
-            </div>
-            """
-
-        st.markdown(f"""
-        <div style="background:#090e15;border:1px solid #1c2738;border-radius:6px;padding:10px 14px;">
-            {grid_rows}
-        </div>
-        """, unsafe_allow_html=True)
-
-    with c_intervene:
-        st.markdown("""
-        <div style="font-family:var(--font-mono);font-size:0.68rem;color:#718096;letter-spacing:1.5px;text-transform:uppercase;margin-bottom:8px;">
-            DYNAMIC SIMULATION & BEDSIDE LAB ACTIONS
-        </div>
-        """, unsafe_allow_html=True)
-
-        st.markdown("""
-        <div style="background:#090e15;border:1px solid #1c2738;border-radius:6px;padding:12px;">
-        """, unsafe_allow_html=True)
-
-        if st.button("💉 STAT ARTERIAL BLOOD GAS (ABG) DRAW", use_container_width=True):
-            st.session_state.stat_abg_active = True
-            st.rerun()
-
-        if st.session_state.stat_abg_active:
-            st.markdown("""
-            <div style="margin-top:6px;margin-bottom:8px;padding:6px 10px;background:rgba(0,230,118,0.1);border-left:3px solid #00e676;font-family:var(--font-mono);font-size:0.65rem;color:#00e676;">
-                INTERVENTION EXECUTED: PaO2, PaCO2, pH & Lactate staleness refreshed to 0.2h. Model uncertainty recalculated!
-            </div>
-            """, unsafe_allow_html=True)
-
-        # Dynamic Aging Time-Scrubber
-        offset_val = st.slider(
-            "Simulate Diagnostic Delay (+Hours without lab redraw)",
-            min_value=0.0, max_value=36.0, value=float(st.session_state.staleness_time_offset), step=2.0,
-            help="Examiner ko dikhane ke liye: Jaise-jaise ghante beetein aur labs draw na hon, staleness badhti hai aur mortality risk climb karta hai."
+    # Clean Streamlit Metrics Row
+    c_m1, c_m2, c_m3, c_m4 = st.columns(4)
+    with c_m1:
+        st.metric(
+            "AI Mortality Risk",
+            f"{predicted_risk_pct:.1f}%",
+            delta=f"{predicted_risk_pct - 17.2:+.1f}% vs ICU avg",
+            delta_color="inverse"
         )
-        if offset_val != st.session_state.staleness_time_offset:
-            st.session_state.staleness_time_offset = offset_val
+    with c_m2:
+        st.metric(
+            "MIMIC-IV Ground Truth",
+            actual_outcome,
+            help="Actual clinical outcome recorded in Beth Israel Deaconess Medical Center records"
+        )
+    with c_m3:
+        st.metric(
+            "Ventilation Duration",
+            f"{int(active_p['vent_duration_hours'])} Hours",
+            help="Total elapsed time on invasive mechanical ventilation"
+        )
+    with c_m4:
+        st.metric(
+            "Model Inference Speed",
+            "0.84 ms",
+            help="LightGBM GBDT production latency per inpatient"
+        )
+
+    st.divider()
+
+    # Interactive Bedside Actions & Dynamic Aging
+    col_act1, col_act2 = st.columns([1, 1])
+
+    with col_act1:
+        st.markdown("#### 🧪 Bedside Lab Interventions")
+        st.caption("Test how refreshing stale arterial blood gases impacts model uncertainty in real time.")
+        
+        if st.button("💉 STAT ARTERIAL BLOOD GAS (ABG) DRAW", use_container_width=True):
+            st.session_state.vent_abg_active = True
             st.rerun()
 
-        if st.button("RESET SIMULATION TO BASELINE", use_container_width=True):
-            st.session_state.staleness_time_offset = 0.0
-            st.session_state.stat_abg_active = False
+        if st.session_state.vent_abg_active:
+            st.success("✅ INTERVENTION EXECUTED: PaO2, PaCO2, pH & Lactate staleness refreshed to 0.2h!")
+
+        if st.button("Reset Inpatient State", use_container_width=True):
+            st.session_state.vent_delay_hours = 0.0
+            st.session_state.vent_abg_active = False
             st.rerun()
 
-        st.markdown("</div>", unsafe_allow_html=True)
+    with col_act2:
+        st.markdown("#### ⏱️ Dynamic Diagnostic Delay Simulation")
+        st.caption("Simulate clinical hours passing without lab testing to watch staleness decay elevate risk.")
+        
+        delay_val = st.slider(
+            "Diagnostic Delay (+Hours without lab redraw)",
+            0.0, 36.0, float(st.session_state.vent_delay_hours), 2.0
+        )
+        if delay_val != st.session_state.vent_delay_hours:
+            st.session_state.vent_delay_hours = delay_val
+            st.rerun()
+
+    # Clean Dataframe of Inpatient Labs
+    st.markdown("#### 📋 Active Biomarkers & Observation Recency")
+    table_data = []
+    for lab in LAB_NAMES:
+        val = p_copy.get(f"{lab}_val", np.nan)
+        h = p_copy.get(f"{lab}_staleness", 48.0)
+        table_data.append({
+            "Biomarker": LAB_DISPLAY[lab],
+            "Measured Value": f"{val:.2f} {LAB_UNITS[lab]}" if not np.isnan(val) else "Not Drawn",
+            "Reference Interval": f"{LAB_NORMAL[lab][0]} - {LAB_NORMAL[lab][1]} {LAB_UNITS[lab]}",
+            "Observation Age": f"{h:.1f} Hours",
+            "Staleness Status": "STALE" if h >= 20.0 else ("MODERATE" if h >= 6.0 else "FRESH")
+        })
+    st.dataframe(pd.DataFrame(table_data), use_container_width=True, hide_index=True)

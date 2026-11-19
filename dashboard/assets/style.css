@@ -1,198 +1,111 @@
-@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap');
 
+/* ─── Modern Clinical White / Clean Medical System Theme (SOFA / Epic Style) ─── */
 :root {
-    /* Modern Clinical Slate Palette (Epic Systems / Apple Health Pro) */
-    --bg-app: #0b0f17;
-    --bg-surface: #111726;
-    --bg-card: #151d2f;
-    --bg-card-hover: #1b253b;
-    --bg-card-subtle: #0e1422;
+    --bg-base: #f8fafc;
+    --bg-card: #ffffff;
+    --bg-subtle: #f1f5f9;
     
-    --border-subtle: #1e293b;
-    --border-focus: #334155;
+    --border-card: #e2e8f0;
+    --border-focus: #0284c7;
     
-    /* Clinical Severity Tokens */
-    --status-critical: #ef4444;
-    --status-critical-bg: rgba(239, 68, 68, 0.12);
-    --status-elevated: #f97316;
-    --status-elevated-bg: rgba(249, 115, 22, 0.12);
-    --status-watch: #eab308;
-    --status-watch-bg: rgba(234, 179, 8, 0.12);
-    --status-stable: #10b981;
-    --status-stable-bg: rgba(16, 185, 129, 0.12);
-    
-    /* Vitals */
-    --vital-ecg: #10b981;
-    --vital-spo2: #06b6d4;
-    --vital-bp: #f43f5e;
-    --vital-resp: #f59e0b;
-    
-    --text-primary: #f8fafc;
-    --text-secondary: #94a3b8;
+    --text-main: #0f172a;
     --text-muted: #64748b;
+    --text-subtle: #94a3b8;
     
-    --font-sans: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+    --primary: #0284c7;
+    --primary-light: #e0f2fe;
+    --primary-dark: #0369a1;
+    
+    --success: #059669;
+    --success-bg: #ecfdf5;
+    --warning: #d97706;
+    --warning-bg: #fffbeb;
+    --danger: #dc2626;
+    --danger-bg: #fef2f2;
+    
+    --font-sans: 'Plus Jakarta Sans', -apple-system, sans-serif;
     --font-mono: 'JetBrains Mono', monospace;
 }
 
-/* Global Reset & Typography */
+/* Base Body */
 .stApp {
-    background-color: var(--bg-app) !important;
-    color: var(--text-primary) !important;
+    background-color: var(--bg-base) !important;
+    color: var(--text-main) !important;
     font-family: var(--font-sans) !important;
-    -webkit-font-smoothing: antialiased;
 }
 
+/* Container Max Width */
 .block-container {
-    padding-top: 1.5rem !important;
+    padding-top: 1.2rem !important;
     padding-bottom: 2.5rem !important;
-    max-width: 1400px !important;
+    max-width: 1440px !important;
 }
 
 /* Sidebar Custom Styling */
 [data-testid="stSidebar"] {
-    background-color: var(--bg-surface) !important;
-    border-right: 1px solid var(--border-subtle) !important;
+    background-color: #ffffff !important;
+    border-right: 1px solid #e2e8f0 !important;
 }
 
-/* Clean Header Navbar */
-.app-header {
-    background: var(--bg-surface);
-    border: 1px solid var(--border-subtle);
-    border-radius: 12px;
-    padding: 16px 24px;
-    margin-bottom: 20px;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
+/* Standardized Native Streamlit Cards */
+div[data-testid="stMetric"] {
+    background: #ffffff !important;
+    border: 1px solid #e2e8f0 !important;
+    border-radius: 10px !important;
+    padding: 14px 18px !important;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.04) !important;
 }
 
-.brand-title {
-    font-size: 1.35rem;
-    font-weight: 800;
-    color: #ffffff;
-    letter-spacing: -0.5px;
-    display: flex;
-    align-items: center;
-    gap: 10px;
-}
-
-.brand-badge {
-    background: rgba(6, 182, 212, 0.15);
-    color: #06b6d4;
-    border: 1px solid rgba(6, 182, 212, 0.3);
-    font-size: 0.70rem;
-    font-weight: 700;
-    padding: 2px 8px;
-    border-radius: 6px;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-}
-
-.brand-sub {
-    font-size: 0.80rem;
-    color: var(--text-secondary);
-    margin-top: 2px;
-}
-
-/* Standardized Clean Card Container */
-.clean-card {
-    background: var(--bg-card);
-    border: 1px solid var(--border-subtle);
-    border-radius: 12px;
-    padding: 20px;
-    margin-bottom: 16px;
-    transition: all 0.2s ease;
-}
-
-.clean-card:hover {
-    border-color: var(--border-focus);
-}
-
-.card-title {
-    font-size: 0.85rem;
-    font-weight: 700;
-    color: var(--text-secondary);
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-    margin-bottom: 12px;
-}
-
-/* Modern Lab Grid Item */
-.lab-item {
-    background: var(--bg-card-subtle);
-    border: 1px solid var(--border-subtle);
-    border-radius: 8px;
-    padding: 10px 14px;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    margin-bottom: 8px;
-}
-
-.lab-name {
-    font-size: 0.85rem;
-    font-weight: 600;
-    color: var(--text-primary);
-}
-
-.lab-val {
-    font-family: var(--font-mono);
-    font-size: 0.95rem;
-    font-weight: 700;
-    color: #38bdf8;
-}
-
-.status-badge {
-    font-family: var(--font-mono);
-    font-size: 0.68rem;
-    font-weight: 700;
-    padding: 3px 8px;
-    border-radius: 6px;
-    display: inline-block;
-}
-
-/* Primary Execution Button */
-.stButton > button {
-    background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%) !important;
-    color: #ffffff !important;
-    border: 1px solid #38bdf8 !important;
-    font-family: var(--font-sans) !important;
-    font-size: 0.88rem !important;
+div[data-testid="stMetricLabel"] {
+    color: var(--text-muted) !important;
+    font-size: 0.75rem !important;
     font-weight: 700 !important;
+    text-transform: uppercase !important;
+    letter-spacing: 0.5px !important;
+}
+
+div[data-testid="stMetricValue"] {
+    color: var(--text-main) !important;
+    font-weight: 800 !important;
+    font-size: 1.8rem !important;
+}
+
+/* Clean Tables & Dataframes */
+div[data-testid="stDataFrame"] {
+    border: 1px solid #e2e8f0 !important;
+    border-radius: 10px !important;
+    overflow: hidden !important;
+}
+
+/* Buttons */
+.stButton > button {
+    background: #0284c7 !important;
+    color: #ffffff !important;
+    border: none !important;
     border-radius: 8px !important;
-    padding: 10px 24px !important;
-    box-shadow: 0 4px 14px rgba(2, 132, 199, 0.25) !important;
-    transition: all 0.2s ease !important;
+    font-weight: 700 !important;
+    font-size: 0.88rem !important;
+    padding: 10px 22px !important;
+    box-shadow: 0 2px 6px rgba(2, 132, 199, 0.25) !important;
+    transition: all 0.15s ease !important;
 }
 
 .stButton > button:hover {
-    background: linear-gradient(135deg, #0369a1 0%, #075985 100%) !important;
-    box-shadow: 0 6px 20px rgba(2, 132, 199, 0.4) !important;
+    background: #0369a1 !important;
+    box-shadow: 0 4px 12px rgba(2, 132, 199, 0.35) !important;
     transform: translateY(-1px) !important;
 }
 
 /* Clean Form Widgets */
 .stSelectbox > div > div {
-    background-color: var(--bg-card) !important;
-    border-color: var(--border-subtle) !important;
-    color: var(--text-primary) !important;
+    background-color: #ffffff !important;
+    border: 1px solid #cbd5e1 !important;
+    color: var(--text-main) !important;
     border-radius: 8px !important;
+    font-weight: 600 !important;
 }
 
-/* Clean Radio Navigation */
-.stRadio > div {
-    gap: 8px;
-}
-
-.stRadio [role="radiogroup"] > label {
-    background: var(--bg-card-subtle);
-    border: 1px solid var(--border-subtle);
-    padding: 8px 14px;
-    border-radius: 8px;
-    transition: all 0.15s ease;
-}
-
-.stRadio [role="radiogroup"] > label:hover {
-    border-color: #38bdf8;
+.stSlider > div {
+    color: var(--text-main) !important;
 }
