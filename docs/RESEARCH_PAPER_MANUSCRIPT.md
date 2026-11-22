@@ -1,8 +1,13 @@
 # Dynamic Mortality Risk Prediction in Mechanically Ventilated Intensive Care Patients via Targeted Laboratory Staleness: A Dual-Cohort Landmark Study on MIMIC-IV
 
-**Authors**: Karan Patil*, Sarthak Kumbhar, Sumaira Shaik, Krishna Hasare  
+**Authors**: Karan Patil* , Sarthak Kumbhar , Sumaira Shaik , Krishna Hasare  
 **Affiliation**: Department of Computer Science and Engineering, D. Y. Patil School of Engineering and Management (Deemed-to-be-University), Kolhapur, Maharashtra 416013, India  
-***Corresponding Author**: Karan Patil (Email: karanpatil82005@gmail.com)  
+***Corresponding Author**: Karan Patil (Email: karanpatil.semco25@dypgroup.edu.in)  
+**Author Emails**:  
+- Karan Patil: karanpatil.semco25@dypgroup.edu.in  
+- Sarthak Kumbhar: sarthakkumbhar.semco23@dypgroup.edu.in  
+- Sumaira Shaik: SumeraShaikh.semco23@dypgroup.edu.in  
+- Krishna Hasare: krishnahasare.semco25@dypgroup.edu.in  
 **Target Journal**: Computers in Biology and Medicine (Elsevier)  
 **Date**: November 2026  
 

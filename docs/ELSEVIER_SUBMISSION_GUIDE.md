@@ -4,8 +4,11 @@
 **Impact Factor:** 7.7 (Q1 Elite) | **Indexing:** PubMed / MEDLINE, Scopus, Web of Science  
 **Author Fee / APC:** ₹0 (100% FREE under Subscription model)  
 **Manuscript Title:** Dynamic Mortality Risk Prediction in Mechanically Ventilated Intensive Care Patients via Targeted Laboratory Staleness: A Dual-Cohort Landmark Study on MIMIC-IV  
-**Lead Author:** Karan Patil (karanpatil82005@gmail.com)  
-**Co-Authors:** Sarthak Kumbhar, Sumaira Shaik, Krishna Hasare  
+**Lead Author:** Karan Patil (karanpatil.semco25@dypgroup.edu.in)  
+**Co-Authors:**  
+- Sarthak Kumbhar (sarthakkumbhar.semco23@dypgroup.edu.in)  
+- Sumaira Shaik (SumeraShaikh.semco23@dypgroup.edu.in)  
+- Krishna Hasare (krishnahasare.semco25@dypgroup.edu.in)  
 
 ---
 

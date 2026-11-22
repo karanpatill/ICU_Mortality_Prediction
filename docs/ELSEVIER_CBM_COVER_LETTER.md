@@ -46,9 +46,9 @@ Sincerely,
 Department of Computer Science and Engineering  
 D. Y. Patil School of Engineering and Management (Deemed-to-be-University)  
 Kolhapur, Maharashtra 416013, India  
-Email: karanpatil82005@gmail.com  
+Email: karanpatil.semco25@dypgroup.edu.in  
 
 **Co-Authors:**  
-- **Sarthak Kumbhar**, Department of Computer Science and Engineering  
-- **Sumaira Shaik**, Department of Computer Science and Engineering  
-- **Krishna Hasare**, Department of Computer Science and Engineering  
+- **Sarthak Kumbhar**, Department of Computer Science and Engineering (Email: sarthakkumbhar.semco23@dypgroup.edu.in)  
+- **Sumaira Shaik**, Department of Computer Science and Engineering (Email: SumeraShaikh.semco23@dypgroup.edu.in)  
+- **Krishna Hasare**, Department of Computer Science and Engineering (Email: krishnahasare.semco25@dypgroup.edu.in)  

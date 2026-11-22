@@ -77,7 +77,9 @@ def build_elsevier_docx(output_path):
     r_affil = p_affil.add_run(
         "Department of Computer Science and Engineering\n"
         "D. Y. Patil School of Engineering and Management (Deemed-to-be-University), Kolhapur, Maharashtra 416013, India\n"
-        "*Corresponding Author: Karan Patil (Email: karanpatil82005@gmail.com)\n"
+        "*Corresponding Author: Karan Patil (Email: karanpatil.semco25@dypgroup.edu.in)\n"
+        "Author Institutional Emails: karanpatil.semco25@dypgroup.edu.in; sarthakkumbhar.semco23@dypgroup.edu.in; "
+        "SumeraShaikh.semco23@dypgroup.edu.in; krishnahasare.semco25@dypgroup.edu.in\n"
         "Target Journal: Computers in Biology and Medicine (Elsevier)"
     )
     r_affil.italic = True
