@@ -1,9 +1,10 @@
-# Dynamic Mortality Risk Prediction in Mechanically Ventilated Intensive Care Patients via Targeted Laboratory Staleness: A Multi-Center Landmark Study on MIMIC-IV
+# Dynamic Mortality Risk Prediction in Mechanically Ventilated Intensive Care Patients via Targeted Laboratory Staleness: A Dual-Cohort Landmark Study on MIMIC-IV
 
-**Authors**: Karan Patil, Sarthak Kumbhar, Sumaira Shaik  
-**Department**: Department of Computer Engineering / Biomedical Informatics  
-**Target Venue**: IEEE Journal of Biomedical and Health Informatics (J-BHI) / Nature Scientific Reports / Critical Care  
-**Date**: October 2026  
+**Authors**: Karan Patil*, Sarthak Kumbhar, Sumaira Shaik, Krishna Hasare  
+**Affiliation**: Department of Computer Science and Engineering, D. Y. Patil School of Engineering and Management (Deemed-to-be-University), Kolhapur, Maharashtra 416013, India  
+***Corresponding Author**: Karan Patil (Email: karanpatil82005@gmail.com)  
+**Target Journal**: Computers in Biology and Medicine (Elsevier)  
+**Date**: November 2026  
 
 ---
 
@@ -325,6 +326,31 @@ The proposed system functions as an autonomous, non-intrusive 24/7 background AI
 ## IX. Conclusion
 
 In this multi-cohort study of **$35,367$ intensive care patients** (including **$23,367$ mechanically ventilated patients** in MIMIC-IV v3.1), we introduced and validated the **Targeted Laboratory Staleness** framework for dynamic ICU mortality prediction. By selectively quantifying measurement decay on intermittent laboratory panels while preserving continuous hemodynamics, our model captures the rich prognostic signal inherent in clinician test-ordering dynamics (Missing Not At Random). The framework achieved statistically significant improvements in discrimination (AUROC: $0.8559$, $\mathbf{p < 0.0001}$) and precision-recall (AUPRC: $0.5854$, $\mathbf{p = 0.0250}$) on MIMIC-IV v3.1, establishing an accurate, computationally lightweight, and clinically interpretable foundation for real-time risk intelligence in critical care.
+
+---
+
+## Declarations
+
+### CRediT Authorship Contribution Statement
+- **Karan Patil**: Conceptualization, Methodology, Software, Machine Learning Architecture, Formal Analysis, Writing - Original Draft, Project Administration.
+- **Sarthak Kumbhar**: Data Curation, Preprocessing, Feature Engineering, Validation, Investigation, Writing - Review & Editing.
+- **Sumaira Shaik**: Statistical Analysis, Bootstrap Evaluation, Clinical Physiology Interpretation, Visualization, Writing - Review & Editing.
+- **Krishna Hasare**: Software Engineering, Decision Support Dashboard Implementation, Benchmark Verification, Resources, Writing - Review & Editing.
+
+### Declaration of Competing Interest
+The authors declare that they have no known competing financial interests or personal relationships that could have appeared to influence the work reported in this paper.
+
+### Funding
+This research did not receive any specific grant from funding agencies in the public, commercial, or not-for-profit sectors.
+
+### Ethics Approval & Consent to Participate
+This retrospective observational study utilized de-identified clinical data from the PhysioNet 2012 Benchmark and the Medical Information Mart for Intensive Care IV (MIMIC-IV v3.1) database. The collection and dissemination of MIMIC-IV were approved by the Institutional Review Boards (IRBs) of the Massachusetts Institute of Technology (MIT) and Beth Israel Deaconess Medical Center (BIDMC). The requirement for individual patient informed consent was waived as all data were de-identified in strict compliance with the Health Insurance Portability and Accountability Act (HIPAA) Safe Harbor provision. Analysis was conducted under credentialed PhysioNet Data Use Agreement (DUA).
+
+### Data Availability Statement
+The primary discovery dataset is publicly accessible via the PhysioNet 2012 Challenge repository (https://physionet.org/content/challenge-2012/). The external validation dataset is available via PhysioNet under the MIMIC-IV repository (https://physionet.org/content/mimiciv/3.1/) to credentialed researchers who have completed Human Subjects Research training and signed the Data Use Agreement.
+
+### Code & Artifact Availability
+All source code, data preprocessing pipelines, trained machine learning model weights (`lightgbm_staleness_production.joblib`), feature schemas, and the AURA-ICU clinical decision support dashboard are publicly available on GitHub: https://github.com/karanpatill/ICU_Mortality_Prediction.
 
 ---
 
