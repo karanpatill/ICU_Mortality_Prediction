@@ -27,12 +27,17 @@ All 3 required submission files have been generated and formatted strictly to El
 
 ## 2. Step-by-Step Submission Walkthrough
 
-### Step 1: Open the Official Elsevier Editorial Manager Portal
-1. Go to the official submission link for **Computers in Biology and Medicine**:  
-   👉 **https://www.editorialmanager.com/compbiomed**  
-   *(Make sure the page title says **"Computers in Biology and Medicine - Elsevier"**, NOT Cancer Biomarkers!)*
-2. Click **"Register Now"** (if you don't already have an Elsevier account) or **"Login with ORCID / Elsevier Credentials"**.
-3. Log in as an **Author**.
+### Step 1: Open the Official Submission Portal (2 Foolproof Methods)
+
+#### Method A (Recommended — 100% Direct from ScienceDirect):
+1. Go to the official Elsevier Journal Homepage:  
+   👉 **https://www.sciencedirect.com/journal/computers-in-biology-and-medicine**
+2. Left side menu mein **"Submit your article"** button par click karein.  
+   *(Yeh button aapko bina kisi error ya wrong redirect ke seedha authenticated submission dashboard par le jata hai!)*
+
+#### Method B (Direct Editorial Manager Shortcode):
+- Direct URL: 👉 **https://www.editorialmanager.com/cobm**  
+  *(Note: Shortcode is **`cobm`** — Computers in Biology and Medicine)*
 
 ---
 
