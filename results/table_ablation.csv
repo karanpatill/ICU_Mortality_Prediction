@@ -1,0 +1,17 @@
+T (h),Model,Feature set,AUROC,AUPRC
+24,LR,No staleness,0.853,0.548
+24,LR,Staleness + sentinel (TLS),0.857,0.559
+24,LR,Missing indicator only,0.854,0.550
+24,LR,Staleness + missing indicator,0.858,0.557
+24,LGBM,No staleness,0.884,0.622
+24,LGBM,Staleness + sentinel (TLS),0.881,0.617
+24,LGBM,Missing indicator only,0.885,0.625
+24,LGBM,Staleness + missing indicator,0.881,0.617
+48,LR,No staleness,0.853,0.548
+48,LR,Staleness + sentinel (TLS),0.857,0.559
+48,LR,Missing indicator only,0.854,0.550
+48,LR,Staleness + missing indicator,0.858,0.557
+48,LGBM,No staleness,0.884,0.622
+48,LGBM,Staleness + sentinel (TLS),0.881,0.617
+48,LGBM,Missing indicator only,0.885,0.625
+48,LGBM,Staleness + missing indicator,0.881,0.617

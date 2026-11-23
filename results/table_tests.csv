@@ -1,0 +1,12 @@
+test_id,input,expected,actual,result
+T-01,Lab last measured 6 h before T = 24 (t_last = 18 h),staleness = 6.0,staleness = 6.0,Pass
+T-02,Lab never measured before T = 24,staleness = 48.0 (sentinel 2*T),staleness = 48.0,Pass
+T-02b,"Lab never measured, T = 48 (NaN input)",staleness = 96.0 (sentinel 2*T),staleness = 96.0,Pass
+T-03,Event at 24.5 h used for landmark T = 24,LeakageError raised,LeakageError raised: event at 24.50 h used for landmark T=24 h,Pass
+T-03b,"Events at 0, 12, 24 h for T = 24",No error (t <= T allowed),no error (boundary t = T allowed),Pass
+T-04,"Perfectly calibrated synthetic predictions (n = 200,000)","slope ~ 1, intercept ~ 0 (tol 0.03)","slope = 1.002, intercept = -0.002",Pass
+T-05,Anti-correlated synthetic predictions,slope < 0,slope = -0.998,Pass
+T-06,"Bootstrap index matrix, n = 500 patients, B = 1000","shape (1000, 500), indices in [0, 499]","shape = (1000, 500), range = [0, 499]",Pass
+T-07,DCA: predict-everyone-positive model,Net benefit equals treat-all,"model(all-positive) NB = [0.4444, 0.375], treat-all NB = [0.4444, 0.375]",Pass
+T-08,Full pipeline on synthetic cohort (n = 600),Runs; source_of_truth.json and figures produced,"return code 0; keys = ['bootstrap', 'cohort', 'config', 'metrics_T24']...",Pass
+T-09,Inject post-T lab values (t = 30 h) for T = 24,Feature matrix unchanged,features identical after injecting 2208 post-T lab rows: True,Pass

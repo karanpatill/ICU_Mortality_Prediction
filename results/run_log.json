@@ -1,0 +1,12 @@
+{
+  "python": "3.12.7",
+  "numpy": "2.3.5",
+  "pandas": "2.2.3",
+  "scikit-learn": "1.6.1",
+  "lightgbm": "4.7.0",
+  "mimic_version": "v3.1",
+  "seed": 42,
+  "cohort_file": "../data/mimiciv/mimiciv_ventilated_cohort_24h.csv",
+  "runtime_s": 120.2,
+  "source_of_truth_sha256": "5f7e57e164c1d8c4c271716e40b3bb47b512f67a201c55ecc6cb86214b479a25"
+}
