@@ -149,12 +149,12 @@ Staleness therefore gave small, model- and horizon-dependent gains in discrimina
 ## CHAPTER 1: INTRODUCTION
 
 ### 1.1 Background and Clinical Motivation
-Invasive mechanical ventilation is one of the most common life-supporting interventions in intensive care units (ICUs). Clinicians must continually balance two risks: keeping a patient on the ventilator too long exposes them to complications such as ventilator-associated pneumonia and barotrauma, while withdrawing support too early risks re-intubation and deterioration [1]. Both decisions rest on a running judgement of how sick the patient is and how that is changing. Mortality risk estimates are one input to that judgement.
+Invasive mechanical ventilation is one of the most common life-supporting interventions in intensive care units (ICUs). Clinicians must continually balance two risks: keeping a patient on the ventilator too long exposes them to complications such as ventilator-associated pneumonia and barotrauma, while withdrawing support too early risks re-intubation and deterioration [[1]](#ref-1). Both decisions rest on a running judgement of how sick the patient is and how that is changing. Mortality risk estimates are one input to that judgement.
 
-In modern ICUs, much of the data behind such judgements is already recorded electronically. The Medical Information Mart for Intensive Care (MIMIC-IV) contains de-identified electronic health records from patients admitted to the Beth Israel Deaconess Medical Center [2]. It makes it possible to study how the timing of measurements, and not only their values, relates to patient outcomes.
+In modern ICUs, much of the data behind such judgements is already recorded electronically. The Medical Information Mart for Intensive Care (MIMIC-IV) contains de-identified electronic health records from patients admitted to the Beth Israel Deaconess Medical Center [[2]](#ref-2). It makes it possible to study how the timing of measurements, and not only their values, relates to patient outcomes.
 
 ### 1.2 Limits of Static Severity Scores
-Severity scores such as APACHE II [3] and SOFA [4] summarise a patient's physiology into a single number, typically from the worst values in a fixed window such as the first 24 hours. They were designed for stratification and comparison between populations, not for continuous updating. Structurally, they do not model how a patient's measurements evolve over the stay, nor how recent each measurement is. This report makes that structural point only. It does not claim that these scores perform poorly, because no static-score baseline is run in this work.
+Severity scores such as APACHE II [[3]](#ref-3) and SOFA [[4]](#ref-4) summarise a patient's physiology into a single number, typically from the worst values in a fixed window such as the first 24 hours. They were designed for stratification and comparison between populations, not for continuous updating. Structurally, they do not model how a patient's measurements evolve over the stay, nor how recent each measurement is. This report makes that structural point only. It does not claim that these scores perform poorly, because no static-score baseline is run in this work.
 
 ### 1.3 The Measurement-Age Problem
 In an ICU, different variables are measured at very different rates. Heart rate is recorded many times an hour, whereas a lactate or a bilirubin may be drawn once or twice a day, or not at all. A model built on a snapshot of latest values treats a creatinine drawn 20 hours earlier exactly like a heart rate recorded one minute earlier. We use the term *silent drift* for this situation: the model's input still looks like a current value, but the clinical reality it describes may have changed since it was measured. (This is our own term, not an established one.)
@@ -177,7 +177,7 @@ The prediction target is fixed throughout this report as:
 
 Here T is 24 or 48 hours after ICU admission. Conditioning on survival to T prevents immortal-time bias, because every patient in the analysed cohort is alive at the moment the prediction is made.
 
-This study is reported in accordance with the **TRIPOD+AI** statement for prediction-model studies [5].
+This study is reported in accordance with the **TRIPOD+AI** statement for prediction-model studies [[5]](#ref-5).
 
 ### 1.6 Scope of Claims and Target Journals
 The realistic publication targets for the work are *Computers in Biology and Medicine* (Elsevier), *BMC Medical Informatics and Decision Making* (primary) and *Scientific Reports* (secondary). The work is a single-database, retrospective study with calibration and decision-curve analysis. Higher-tier informatics journals such as the *IEEE Journal of Biomedical and Health Informatics*, the *Journal of Biomedical Informatics* and *JAMIA* usually expect external multi-centre validation, prospective evaluation or substantial methodological novelty. None of these is part of this study, so they are out of scope for this run.
@@ -208,7 +208,7 @@ The proposed system, Targeted Laboratory Staleness (TLS), has four elements:
 3. **Vitals preserved without decay.** Seven vital-sign groups (heart rate, systolic, diastolic and mean arterial pressure, respiratory rate, oxygen saturation and body temperature) are each summarised by their last, mean, minimum and maximum values, as measured, and are not decayed.
 4. **Landmark design.** Predictions are made at $T = 24	ext{ h}$ and $T = 48	ext{ h}$, using only data recorded at or before T.
 
-The system is evaluated with logistic regression and LightGBM [6]. It does not claim to solve staleness. It claims only to test whether staleness features add predictive value.
+The system is evaluated with logistic regression and LightGBM [[6]](#ref-6). It does not claim to solve staleness. It claims only to test whether staleness features add predictive value.
 
 ---
 
@@ -220,12 +220,12 @@ The literature search covered PubMed, IEEE Xplore, and Google Scholar, focusing 
 Studies were considered eligible if they developed or evaluated ICU mortality prediction models using electronic health record data, particularly data from critical-care settings. Studies that did not address mortality or clinical outcome prediction, or lacked sufficient methodological detail, were excluded. A total of 50 research papers published between 2016 and 2025 were reviewed and considered for the literature review. The selected studies helped establish the research background, identify methodological approaches, and understand the role of temporal information and missing clinical measurements in ICU mortality prediction.
 
 ### 3.2 Dataset: MIMIC-IV
-The analysis uses MIMIC-IV version 3.1, a de-identified database of admissions to the Beth Israel Deaconess Medical Center [2]. Access requires PhysioNet credentialing, completion of human-subjects research training and signing of a data use agreement [7]. The modules used are hosp (patients, admissions, laboratory events) and icu (ICU stays, procedure events, chart events).
+The analysis uses MIMIC-IV version 3.1, a de-identified database of admissions to the Beth Israel Deaconess Medical Center [[2]](#ref-2). Access requires PhysioNet credentialing, completion of human-subjects research training and signing of a data use agreement [[7]](#ref-7). The modules used are hosp (patients, admissions, laboratory events) and icu (ICU stays, procedure events, chart events).
 
 Invasive ventilation is identified from the ICU procedure events table using item ID 225792, which was verified against the MIMIC-IV item dictionary. Ventilation intervals were matched to ICU stays by actual temporal overlap within the same patient admission. The laboratory and vital-sign item identifiers are listed in Chapter 7.
 
 ### 3.3 The PhysioNet 2012 Challenge Dataset
-The PhysioNet/Computing in Cardiology Challenge 2012 dataset [8] has a fixed public structure: Set A contains 4,000 ICU records with public outcomes, Sets A and B together contain 8,000 records, and Set C contains 4,000 records with withheld outcomes. This study uses Set A only, for a separate exploratory experiment reported in Section 8.5. The primary analysis uses MIMIC-IV. The two datasets differ in cohort, prediction target and design, so their results are never merged or compared directly.
+The PhysioNet/Computing in Cardiology Challenge 2012 dataset [[8]](#ref-8) has a fixed public structure: Set A contains 4,000 ICU records with public outcomes, Sets A and B together contain 8,000 records, and Set C contains 4,000 records with withheld outcomes. This study uses Set A only, for a separate exploratory experiment reported in Section 8.5. The primary analysis uses MIMIC-IV. The two datasets differ in cohort, prediction target and design, so their results are never merged or compared directly.
 
 ---
 
@@ -236,7 +236,7 @@ The PhysioNet/Computing in Cardiology Challenge 2012 dataset [8] has a fixed pub
 - Landmark predictions at $T = 24	ext{ h}$ and $T = 48	ext{ h}$.
 - Two models: L2 logistic regression and LightGBM.
 - Staleness features for 13 laboratory variables, with a sentinel and a missing-indicator ablation.
-- Evaluation by AUROC, AUPRC, Brier score, calibration slope and intercept, reliability plot, and decision curve analysis [9].
+- Evaluation by AUROC, AUPRC, Brier score, calibration slope and intercept, reliability plot, and decision curve analysis [[9]](#ref-9).
 - A Streamlit decision-support demonstration using synthetic data.
 - A separate exploratory experiment on PhysioNet 2012 Set A (Section 8.5), kept apart from the primary analysis.
 
@@ -270,7 +270,7 @@ Table 5.1 summarizes the system requirements.
 The outcome is the in-hospital mortality indicator, defined using the target sentence in Section 1.5. The time zero for each patient is ICU admission, and the landmarks are 24 h and 48 h after it. Patients whose ICU stay is shorter than T, who were not ventilated by T, or who died before T are excluded, and each exclusion is counted in the cohort flow (Table 8.2).
 
 ### 5.3 Sample Size
-The analysed cohort is 23,427 patients at 24 h with 3,337 deaths, and 17,072 patients at 48 h with 2,914 deaths. The Base feature set has 43 candidate predictors, the TLS and missingness sets 56 each, and the combined set 69. With 56 predictors in the TLS set this gives about 60 events per predictor at 24 h and 52 at 48 h (about 48 and 42 for the 69-predictor combined set), well above the traditional minimum of 10 events per variable [10]. These counts refer to the final expanded model input columns, not to the number of underlying clinical variables.
+The analysed cohort is 23,427 patients at 24 h with 3,337 deaths, and 17,072 patients at 48 h with 2,914 deaths. The Base feature set has 43 candidate predictors, the TLS and missingness sets 56 each, and the combined set 69. With 56 predictors in the TLS set this gives about 60 events per predictor at 24 h and 52 at 48 h (about 48 and 42 for the 69-predictor combined set), well above the traditional minimum of 10 events per variable [[10]](#ref-10). These counts refer to the final expanded model input columns, not to the number of underlying clinical variables.
 
 ### 5.4 Feasibility Study
 - **Technical feasibility:** The project uses Python, pandas, scikit-learn and LightGBM, all freely available and running on an ordinary laptop or workstation.
@@ -575,12 +575,12 @@ The public demonstration uses synthetic patient records that conform to the MIMI
 ---
 
 ### 11.2 Navigating the Dashboard
-The AURA-ICU CDSS interface features a responsive healthcare dark-mode design with clean medical typography. The left sidebar hosts the **Operational Workbench Navigation** allowing clinicians, researchers, and examiners to switch between six dedicated clinical views:
+The AURA-ICU CDSS interface features a responsive healthcare design with clean medical typography. The left sidebar hosts the **Operational Workbench Navigation** allowing clinicians, researchers, and examiners to switch between six dedicated clinical views:
 
 #### Workbench 1: Ventilator Telemetry Console (`ventilator_screen.py`)
 - **Primary Function:** Simulates a bedside intensive-care mechanical ventilator interface with live graphical waveforms and respiratory mechanics telemetry.
 - **Key Display Elements:**
-  - **Live Waveform Plots:** High-frequency, synchronized pressure-time ($P_{	ext{aw}}$), flow-time ($\dot{V}$), and volume-time ($V$) respiratory curves rendered using Plotly.
+  - **Live Waveform Plots:** High-frequency, synchronized pressure-time ($P_{	ext{aw}}$), flow-time ($\dot{V}$), and volume-time ($V$) respiratory curves rendered using Plotly with responsive container width.
   - **Scalar Mechanics Panel:** Peak Inspiratory Pressure (PIP), Plateau Pressure ($P_{	ext{plat}}$), Positive End-Expiratory Pressure (PEEP), Mean Airway Pressure ($P_{	ext{mean}}$), Inspiratory Tidal Volume ($V_{	ext{ti}}$), Expiratory Tidal Volume ($V_{	ext{te}}$), Respiratory Rate, Minute Ventilation ($\dot{V}_{	ext{E}}$), Static Compliance ($C_{	ext{stat}}$), and Airway Resistance ($R_{	ext{aw}}$).
   - **Clinical Weaning Telemetry:** Automatically computes Driving Pressure ($\Delta P = P_{	ext{plat}} - 	ext{PEEP}$, alerting when $> 15	ext{ cmH}_2	ext{O}$), Rapid Shallow Breathing Index (RSBI = $f / V_t$, alerting when $> 105	ext{ breaths/min/L}$), and Expiratory Time Constant ($	au_e$).
   - **Weaning Status Badges:** Real-time assessment badges indicate whether the patient is clinically eligible for spontaneous breathing trials (SBT).
@@ -637,13 +637,42 @@ The AURA-ICU CDSS interface features a responsive healthcare dark-mode design wi
 
 ## CHAPTER 12: BIBLIOGRAPHY
 
-[1] E. A. Goligher, N. D. Ferguson, and L. J. Brochard, "Clinical challenges in mechanical ventilation," *The Lancet*, vol. 387, no. 10030, pp. 1856-1866, 2016.  
-[2] A. E. W. Johnson et al., "MIMIC-IV, a freely accessible electronic health record dataset," *Scientific Data*, vol. 10, no. 1, p. 1, 2023.  
-[3] W. A. Knaus, E. A. Draper, D. P. Wagner, and J. E. Zimmerman, "APACHE II: A severity of disease classification system," *Critical Care Medicine*, vol. 13, no. 10, pp. 818-829, 1985.  
-[4] J.-L. Vincent et al., "The SOFA (Sepsis-related Organ Failure Assessment) score to describe organ dysfunction/failure," *Intensive Care Medicine*, vol. 22, no. 7, pp. 707-710, 1996.  
-[5] G. S. Collins et al., "TRIPOD+AI statement: updated guidance for reporting clinical prediction models that use regression or machine learning methods," *BMJ*, vol. 385, p. e078378, 2024.  
-[6] G. Ke et al., "LightGBM: A highly efficient gradient boosting decision tree," in *Proc. Advances in Neural Information Processing Systems (NIPS)*, 2017, pp. 3146-3154.  
-[7] A. L. Goldberger et al., "PhysioBank, PhysioToolkit, and PhysioNet: Components of a new research resource for complex physiologic signals," *Circulation*, vol. 101, no. 23, pp. e215-e220, 2000.  
-[8] I. Silva, G. Moody, D. J. Scott, L. A. Celi, and R. G. Mark, "Predicting in-hospital mortality of ICU patients: The PhysioNet/Computing in Cardiology Challenge 2012," *Computing in Cardiology*, vol. 39, pp. 245-248, 2012.  
-[9] A. J. Vickers and E. B. Elkin, "Decision curve analysis: A novel method for evaluating prediction models," *Medical Decision Making*, vol. 26, no. 6, pp. 565-574, 2006.  
-[10] R. D. Riley et al., "Calculating the sample size required for developing a clinical prediction model," *BMJ*, vol. 368, p. m441, 2020.  
+<div id="ref-1"></div>
+
+- **[[1]](https://doi.org/10.1016/S0140-6736(16)30177-6)** E. A. Goligher, N. D. Ferguson, and L. J. Brochard, "Clinical challenges in mechanical ventilation," *The Lancet*, vol. 387, no. 10030, pp. 1856-1866, 2016. [DOI Link](https://doi.org/10.1016/S0140-6736(16)30177-6)  
+
+<div id="ref-2"></div>
+
+- **[[2]](https://doi.org/10.1038/s41597-022-01899-x)** A. E. W. Johnson et al., "MIMIC-IV, a freely accessible electronic health record dataset," *Scientific Data*, vol. 10, no. 1, p. 1, 2023. [DOI Link](https://doi.org/10.1038/s41597-022-01899-x)  
+
+<div id="ref-3"></div>
+
+- **[[3]](https://doi.org/10.1097/00003246-198510000-00009)** W. A. Knaus, E. A. Draper, D. P. Wagner, and J. E. Zimmerman, "APACHE II: A severity of disease classification system," *Critical Care Medicine*, vol. 13, no. 10, pp. 818-829, 1985. [DOI Link](https://doi.org/10.1097/00003246-198510000-00009)  
+
+<div id="ref-4"></div>
+
+- **[[4]](https://doi.org/10.1007/BF01709751)** J.-L. Vincent et al., "The SOFA (Sepsis-related Organ Failure Assessment) score to describe organ dysfunction/failure," *Intensive Care Medicine*, vol. 22, no. 7, pp. 707-710, 1996. [DOI Link](https://doi.org/10.1007/BF01709751)  
+
+<div id="ref-5"></div>
+
+- **[[5]](https://doi.org/10.1136/bmj-2023-078378)** G. S. Collins et al., "TRIPOD+AI statement: updated guidance for reporting clinical prediction models that use regression or machine learning methods," *BMJ*, vol. 385, p. e078378, 2024. [DOI Link](https://doi.org/10.1136/bmj-2023-078378)  
+
+<div id="ref-6"></div>
+
+- **[[6]](https://proceedings.neurips.cc/paper/2017/hash/6449f44a102fde848669bdd9eb6b76fa-Abstract.html)** G. Ke et al., "LightGBM: A highly efficient gradient boosting decision tree," in *Proc. Advances in Neural Information Processing Systems (NIPS)*, 2017, pp. 3146-3154. [Paper Link](https://proceedings.neurips.cc/paper/2017/hash/6449f44a102fde848669bdd9eb6b76fa-Abstract.html)  
+
+<div id="ref-7"></div>
+
+- **[[7]](https://doi.org/10.1161/01.CIR.101.23.e215)** A. L. Goldberger et al., "PhysioBank, PhysioToolkit, and PhysioNet: Components of a new research resource for complex physiologic signals," *Circulation*, vol. 101, no. 23, pp. e215-e220, 2000. [DOI Link](https://doi.org/10.1161/01.CIR.101.23.e215)  
+
+<div id="ref-8"></div>
+
+- **[[8]](https://doi.org/10.1109/CIC.2012.6424294)** I. Silva, G. Moody, D. J. Scott, L. A. Celi, and R. G. Mark, "Predicting in-hospital mortality of ICU patients: The PhysioNet/Computing in Cardiology Challenge 2012," *Computing in Cardiology*, vol. 39, pp. 245-248, 2012. [DOI Link](https://doi.org/10.1109/CIC.2012.6424294)  
+
+<div id="ref-9"></div>
+
+- **[[9]](https://doi.org/10.1177/0272989X06295361)** A. J. Vickers and E. B. Elkin, "Decision curve analysis: A novel method for evaluating prediction models," *Medical Decision Making*, vol. 26, no. 6, pp. 565-574, 2006. [DOI Link](https://doi.org/10.1177/0272989X06295361)  
+
+<div id="ref-10"></div>
+
+- **[[10]](https://doi.org/10.1136/bmj.m441)** R. D. Riley et al., "Calculating the sample size required for developing a clinical prediction model," *BMJ*, vol. 368, p. m441, 2020. [DOI Link](https://doi.org/10.1136/bmj.m441)  

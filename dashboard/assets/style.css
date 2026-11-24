@@ -75,11 +75,12 @@ div[data-testid="stMetricValue"] {
 }
 
 /* Clean Tables & Dataframes */
-div[data-testid="stDataFrame"] {
+div[data-testid="stDataFrame"], div[data-testid="stTable"] {
     border: 1px solid #e2e8f0 !important;
     border-radius: 10px !important;
     overflow-x: auto !important;
     width: 100% !important;
+    max-width: 100% !important;
 }
 
 /* Responsive Viewport Rules */
@@ -141,4 +142,38 @@ div[data-testid="stRadio"] label {
 
 .stSlider > div {
     color: var(--text-main) !important;
+}
+
+/* ─── Fully Responsive Diagrams, Images and Plots (Prevent Overflow / Splitting) ─── */
+img, svg, .element-container img, div[data-testid="stImage"] img, div[data-testid="stImage"] {
+    max-width: 100% !important;
+    height: auto !important;
+    object-fit: contain !important;
+    border-radius: 8px;
+}
+
+.plot-container, .js-plotly-plot, .plotly, [data-testid="stPlotlyChart"] {
+    width: 100% !important;
+    max-width: 100% !important;
+    overflow-x: auto !important;
+}
+
+/* Prevent Header clutter */
+header[data-testid="stHeader"] {
+    background-color: transparent !important;
+}
+
+/* Anchor Link Styling for Citations */
+a.citation-link {
+    color: #0284c7 !important;
+    text-decoration: none !important;
+    font-weight: 700 !important;
+    padding: 1px 4px;
+    background: #e0f2fe;
+    border-radius: 4px;
+}
+
+a.citation-link:hover {
+    text-decoration: underline !important;
+    background: #bae6fd;
 }

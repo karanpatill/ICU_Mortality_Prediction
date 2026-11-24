@@ -11,16 +11,7 @@ from pathlib import Path
 BASE_DIR = Path(__file__).resolve().parent.parent.parent
 
 def render_documentation():
-    """Render comprehensive project documentation, clinical methodology, and experimental results."""
-
-    st.markdown("""
-    <div style="margin-bottom:18px;">
-        <span class="section-header">PROJECT DOCUMENTATION & CLINICAL REPORT</span>
-        <div style="font-size: 0.9rem; color: #64748b; margin-top: 4px;">
-            Course Project (23CSEU7J12) | Department of Computer Science & Engineering | Academic Year 2026-27
-        </div>
-    </div>
-    """, unsafe_allow_html=True)
+    """Render comprehensive project documentation, clinical methodology, and experimental results with responsive elements and clickable citations."""
 
     tab1, tab2, tab3, tab4, tab5, tab6 = st.tabs([
         "Executive Summary",
@@ -45,10 +36,10 @@ def render_documentation():
         Invasive mechanical ventilation is one of the most critical life-supporting interventions in intensive care units (ICUs). 
         Clinicians face a continuous dilemma: prolonged mechanical ventilation increases the risk of severe complications such as 
         ventilator-associated pneumonia (VAP) and barotrauma, whereas premature extubation carries the hazard of sudden respiratory 
-        failure, re-intubation, and worsened in-hospital mortality. Continuous and dynamic risk assessment is required to support weaning and escalation decisions.
+        failure, re-intubation, and worsened in-hospital mortality [[1]](#ref-1). Continuous and dynamic risk assessment is required to support weaning and escalation decisions.
         
         #### 2. Limits of Conventional Static Severity Scores
-        Traditional ICU severity scores such as **APACHE II** and **SOFA** compress a patient's clinical state into a single static number, 
+        Traditional ICU severity scores such as **APACHE II** [[3]](#ref-3) and **SOFA** [[4]](#ref-4) compress a patient's clinical state into a single static number, 
         typically derived from the worst physiological measurements in the initial 24 hours of admission. Structurally, these scores:
         - Do not account for the longitudinal dynamic evolution of organ function.
         - Treat all measurements equally, regardless of when they were taken.
@@ -56,19 +47,19 @@ def render_documentation():
         
         #### 3. The Measurement-Age Problem & "Silent Drift"
         In modern critical care telemetry, vital signs (heart rate, invasive blood pressures, SpO2) are logged continuously or every few minutes. 
-        In contrast, laboratory blood draws (lactate, arterial blood gases, bilirubin, creatinine) occur at irregular intervals—often separated by 12, 24, or 48 hours.
+        In contrast, laboratory blood draws (lactate, arterial blood gases, bilirubin, creatinine) occur at irregular intervals—often separated by 12, 24, or 48 hours [[2]](#ref-2).
         
         Standard machine learning models evaluate snapshots of the latest recorded values. Consequently, a creatinine measurement drawn 22 hours earlier 
         is treated as if it were drawn 5 minutes ago. We characterize this discrepancy as **silent drift**: the model receives an apparently current physiological input, 
         yet the underlying clinical reality may have significantly deteriorated.
         
         #### 4. The Core Innovation: Targeted Laboratory Staleness (TLS)
-        Rather than relying on uncalibrated forward-filling or indiscriminate data dropping, AURA-ICU explicitly parameterizes the age of each laboratory test:
+        Rather than relying on uncalibrated forward-filling or indiscriminate data dropping, AURA-ICU explicitly parameterizes the age of each laboratory test [[6]](#ref-6):
         - **Explicit Staleness Feature ($s_j$):** Time elapsed in hours between the most recent measurement and the landmark prediction horizon $T$:
           $$s_j = T - t_{\\text{last}, j}$$
         - **Conservative Sentinel Imputation ($2 \\times T$):** If a biomarker was never measured prior to landmark $T$, its staleness is deterministically assigned to $2T$ (e.g., $48\\text{ h}$ at $T=24\\text{ h}$ and $96\\text{ h}$ at $T=48\\text{ h}$), representing maximum uncertainty.
         - **Vital-Sign Preservation:** High-frequency vital signs are preserved in their native continuous form without artificial decay.
-        - **Strict Landmark Design:** Prediction targets in-hospital mortality strictly among patients who survived to landmark $T$, preventing immortal-time bias in full compliance with the **TRIPOD+AI** statement.
+        - **Strict Landmark Design:** Prediction targets in-hospital mortality strictly among patients who survived to landmark $T$, preventing immortal-time bias in full compliance with the **TRIPOD+AI** statement [[5]](#ref-5).
         """)
 
         col1, col2, col3, col4 = st.columns(4)
@@ -87,13 +78,18 @@ def render_documentation():
         ### Clinical Cohort Derivation & Feature Engineering
         
         #### 1. Landmark Cohort Selection Criteria
-        From the Beth Israel Deaconess Medical Center **MIMIC-IV v3.1** database, adult ICU stays were filtered using a rigorous protocol:
+        From the Beth Israel Deaconess Medical Center **MIMIC-IV v3.1** database [[2]](#ref-2), adult ICU stays were filtered using a rigorous protocol [[7]](#ref-7):
         - Adult patients (age $\\ge 18$ years at admission).
         - Documented invasive mechanical ventilation interval overlapping the ICU stay (verified via item ID `225792`).
         - Length of ICU stay $\\ge T$ hours ($T=24\\text{ h}$ or $T=48\\text{ h}$).
         - Mechanically ventilated by landmark $T$.
         - Documented survival to landmark $T$ (conditioning on survival eliminates immortal-time bias).
         """)
+
+        # Responsive Cohort Flow Diagram
+        flow_path = BASE_DIR / "results" / "fig_cohort_flow.png"
+        if flow_path.exists():
+            st.image(str(flow_path), caption="Figure: Verified MIMIC-IV Cohort Selection Flow (T24 & T48)", use_container_width=True)
 
         st.markdown("#### Table: Verified MIMIC-IV v3.1 Clinical Item Identifiers")
         item_data = [
@@ -123,13 +119,13 @@ def render_documentation():
 
         st.markdown("""
         #### 2. Feature Configurations & Ablation Architecture
-        - **Base (43 Predictors):** Demographics (age, gender, ventilation duration, admission type, first care unit), 7 vital-sign aggregations (last, mean, min, max), and latest laboratory values without staleness.
+        - **Base (43 Predictors):** Demographics, vital-sign summaries (last, mean, min, max), and latest laboratory values without staleness.
         - **TLS (56 Predictors):** Base feature set plus 13 explicit Targeted Laboratory Staleness features ($s_j$) with $2T$ sentinel encoding.
         - **Missingness (56 Predictors):** Base feature set plus 13 binary missingness indicator variables ($m_j \\in \\{0, 1\\}$).
         - **Both (69 Predictors):** Base feature set + 13 staleness features + 13 missingness indicators.
         
         #### 3. Patient-Level Data Partitioning (Strict Separation)
-        To prevent optimistic data leakage across repeated ICU stays, all splits were executed strictly at the unique patient level (`subject_id`):
+        Sample size validation follows established statistical power rules [[10]](#ref-10). All splits were executed strictly at the unique patient level (`subject_id`):
         """)
         
         split_table = [
@@ -137,7 +133,7 @@ def render_documentation():
             {"Partition": "Validation Set", "T=24h Count": "3,749 (16%)", "T=48h Count": "2,732 (16%)", "Role": "Hyperparameter tuning and early stopping"},
             {"Partition": "Held-Out Test Set", "T=24h Count": "4,686 (20%)", "T=48h Count": "3,415 (20%)", "Role": "Untouched benchmark evaluation & bootstrap testing"}
         ]
-        st.table(pd.DataFrame(split_table))
+        st.dataframe(pd.DataFrame(split_table), use_container_width=True)
 
     # ─── TAB 3: BENCHMARK RESULTS & STATISTICS ────────────────────────────────
     with tab3:
@@ -169,11 +165,29 @@ def render_documentation():
         ]
         st.dataframe(pd.DataFrame(delta_data), use_container_width=True)
 
+        # Responsive Diagrams Display
+        st.markdown("#### Clinical Evaluation Diagrams (Responsive Rendering)")
+        c1, c2 = st.columns(2)
+        with c1:
+            roc_path = BASE_DIR / "results" / "fig_roc_T24.png"
+            if roc_path.exists():
+                st.image(str(roc_path), caption="ROC Curves (T = 24 h)", use_container_width=True)
+            cal_path = BASE_DIR / "results" / "fig_calibration_T24.png"
+            if cal_path.exists():
+                st.image(str(cal_path), caption="Calibration Reliability Plot (T = 24 h)", use_container_width=True)
+        with c2:
+            dca_path = BASE_DIR / "results" / "fig_dca_T24.png"
+            if dca_path.exists():
+                st.image(str(dca_path), caption="Decision Curve Analysis (DCA Net Benefit) [9]", use_container_width=True)
+            shap_path = BASE_DIR / "results" / "fig_shap_T24.png"
+            if shap_path.exists():
+                st.image(str(shap_path), caption="TreeSHAP Feature Attribution (Top Predictors)", use_container_width=True)
+
         st.markdown("""
         #### Key Clinical Takeaways:
-        1. **Model- and Horizon-Dependent Gains:** TLS does not provide a universal, uniform boost across all settings. Instead, measurement recency acts differently on linear versus tree ensembles. At $T=24\\text{ h}$, staleness yields significant discrimination improvement in Logistic Regression ($+0.0108$ AUROC, $p=0.0020$). At $T=48\\text{ h}$, staleness yields significant improvement in LightGBM ($+0.0089$ AUROC, $p=0.0060$).
+        1. **Model- and Horizon-Dependent Gains:** TLS does not provide a universal, uniform boost across all settings. At $T=24\\text{ h}$, staleness yields significant discrimination improvement in Logistic Regression ($+0.0108$ AUROC, $p=0.0020$). At $T=48\\text{ h}$, staleness yields significant improvement in LightGBM ($+0.0089$ AUROC, $p=0.0060$).
         2. **TreeSHAP Feature Attribution:** TreeSHAP analysis revealed `bilirubin_staleness` among the **top 5 most influential features** in the entire model, outranking standard absolute lab values such as creatinine, sodium, and platelets.
-        3. **Decision Curve Analysis (DCA):** Across clinical threshold probabilities ranging from 0.05 to 0.50, the TLS-augmented LightGBM model demonstrated superior net clinical benefit compared to treat-all and treat-none intervention strategies.
+        3. **Decision Curve Analysis (DCA):** Evaluated according to Vickers & Elkin standards [[9]](#ref-9). Across clinical threshold probabilities ranging from 0.05 to 0.50, the TLS-augmented LightGBM model demonstrated superior net clinical benefit compared to treat-all and treat-none strategies.
         """)
 
     # ─── TAB 4: RISK ANALYSIS & GOVERNANCE ────────────────────────────────────
@@ -181,7 +195,7 @@ def render_documentation():
         st.markdown("""
         ### Risk Analysis, Mitigations & Ethical Governance
         
-        #### 1. Methodological Risk Matrix (Table 9.1)
+        #### 1. Methodological Risk Matrix
         """)
 
         risk_matrix = [
@@ -195,7 +209,7 @@ def render_documentation():
 
         st.markdown("""
         #### 2. Data Governance & Ethical Compliance
-        - **Database:** MIMIC-IV version 3.1, distributed via PhysioNet under the Health Insurance Portability and Accountability Act (HIPAA) Safe Harbor provision.
+        - **Database:** MIMIC-IV version 3.1, distributed via PhysioNet under the Health Insurance Portability and Accountability Act (HIPAA) Safe Harbor provision [[2]](#ref-2), [[7]](#ref-7).
         - **Ethical Review:** Secondary analysis of existing de-identified clinical records involving no direct patient contact, clinical trial recruitment, or intervention.
         - **PhysioNet Credentialing:** Research team members completed the mandatory human-subjects research training (CITI Program / Data or Specimens Only Research) and signed the MIMIC-IV Data Use Agreement (DUA).
         - **Redistribution Policy:** No protected health information (PHI) or raw patient records are stored or redistributed. All public CDSS demonstrations utilize synthesized clinical records conforming to the feature schema.
@@ -222,7 +236,7 @@ def render_documentation():
             {"Name": "Sumaira Shaik", "PRN": "2023025176", "Project Role": "Pipeline Validation, Testing & Integrity", "Institutional Email": "SumeraShaikh.semco23@dypgroup.edu.in", "Training Status": "CITI Completed / DUA Registered"},
             {"Name": "Krishna Hasare", "PRN": "2023025050", "Project Role": "CDSS Dashboard Architecture & System Integration", "Institutional Email": "krishnahasare.semco25@dypgroup.edu.in", "Training Status": "CITI Completed / DUA Registered"}
         ]
-        st.table(pd.DataFrame(team_records))
+        st.dataframe(pd.DataFrame(team_records), use_container_width=True)
 
         st.markdown("""
         #### Faculty Supervision & Institutional Leadership
@@ -235,10 +249,10 @@ def render_documentation():
         #### Target Journal Publications & Reporting Standards
         - **Primary Submission Target:** *Computers in Biology and Medicine* (Elsevier, Q1, IF: 7.7) / *BMC Medical Informatics and Decision Making*
         - **Secondary Submission Target:** *Scientific Reports* (Nature Portfolio)
-        - **Reporting Guideline:** Fully conforming to the **TRIPOD+AI** (*Transparent Reporting of a multivariable prediction model of an Individual Prognosis Or Diagnosis + Artificial Intelligence*) standard.
+        - **Reporting Guideline:** Fully conforming to the **TRIPOD+AI** standard [[5]](#ref-5).
         """)
 
-    # ─── TAB 6: CDSS USER MANUAL ──────────────────────────────────────────────
+    # ─── TAB 6: CDSS USER MANUAL & BIBLIOGRAPHY ───────────────────────────────
     with tab6:
         st.markdown("""
         ### Clinical Decision Support System (CDSS) User Manual
@@ -248,45 +262,65 @@ def render_documentation():
         - **Core Dependencies:** `streamlit`, `lightgbm`, `scikit-learn`, `pandas`, `numpy`, `plotly`, `statsmodels`, `joblib`.
         - **Repository Launch Command:**
           ```bash
-          # From project root directory
           streamlit run dashboard/app.py
           ```
         
         #### 2. Operational Workbench Guide
         The AURA-ICU dashboard interface provides 6 dedicated clinical workbenches:
+        1. **Ventilator Telemetry Console:** Live waveform plots (pressure, flow, volume) and weaning parameters (Driving Pressure, RSBI).
+        2. **Clinical Dossiers & AI Inference:** Patient-specific electronic health record summary with calibrated LightGBM risk probabilities.
+        3. **Central Nursing Station (10 Beds):** Ward-level acuity triage interface dynamically sorting patients by mortality hazard.
+        4. **Diagnostic & Biomarker Monitor:** Interactive staleness heatmap across all 13 laboratory biomarkers with physiological trend curves.
+        5. **Counterfactual Simulation Lab ("What-If"):** Interactive sandbox allowing clinicians to simulate repeat testing and observe dynamic risk reduction.
+        6. **Clinical Specification & Protocol:** Complete academic report, MIMIC-IV cohort derivations, statistical tables, and citations.
         
-        1. **Ventilator Telemetry Console:**
-           - Real-time pressure-time, flow-time, and volume-time waveform rendering.
-           - Ventilator mode indicators (VCV, PCV, SIMV, PSV) and driving pressure telemetry ($P_{\\text{plat}} - \\text{PEEP}$).
-           - Rapid Shallow Breathing Index (RSBI) computation and automated weaning readiness alerts.
+        ---
         
-        2. **Clinical Dossiers & AI Inference:**
-           - Patient-specific electronic health record summary.
-           - Active probability inference display from the calibrated LightGBM model.
-           - Multi-tier mortality risk classification (Low, Moderate, High, Critical).
+        ### Bibliography (Clickable Academic References)
         
-        3. **Central Nursing Station (10 Beds):**
-           - High-level overview of an entire intensive care unit ward.
-           - Dynamic risk sorting to triage highest-acuity patients requiring immediate bedside attention.
-           - At-a-glance visualization of stale biomarker counts per bed.
+        <div id="ref-1"></div>
         
-        4. **Diagnostic & Biomarker Monitor:**
-           - Interactive staleness heatmap across all 13 monitored laboratory biomarkers.
-           - Color-coded recency indicators: Fresh ($<6\\text{ h}$), Moderate ($6-20\\text{ h}$), Stale ($20-48\\text{ h}$), Sentinel ($\\ge 48\\text{ h}$).
-           - Historical trend trajectories and vital-sign distribution ranges.
+        - **[[1]](https://doi.org/10.1016/S0140-6736(16)30177-6)** E. A. Goligher, N. D. Ferguson, and L. J. Brochard, "Clinical challenges in mechanical ventilation," *The Lancet*, vol. 387, no. 10030, pp. 1856-1866, 2016. [DOI Link](https://doi.org/10.1016/S0140-6736(16)30177-6)
         
-        5. **Counterfactual Simulation Lab ("What-If"):**
-           - Interactive slider panel allowing clinicians to simulate the effect of re-ordering stale lab tests.
-           - Demonstrates how acquiring a fresh arterial blood gas or lactate dynamically recalibrates predicted mortality risk.
+        <div id="ref-2"></div>
         
-        6. **Clinical Specification & Protocol (This Section):**
-           - Complete academic documentation, statistical records, cohort derivation flow, and institutional governance.
+        - **[[2]](https://doi.org/10.1038/s41597-022-01899-x)** A. E. W. Johnson et al., "MIMIC-IV, a freely accessible electronic health record dataset," *Scientific Data*, vol. 10, no. 1, p. 1, 2023. [DOI Link](https://doi.org/10.1038/s41597-022-01899-x)
         
-        #### 3. Clinical Safety & Demonstrational Disclaimer
+        <div id="ref-3"></div>
+        
+        - **[[3]](https://doi.org/10.1097/00003246-198510000-00009)** W. A. Knaus, E. A. Draper, D. P. Wagner, and J. E. Zimmerman, "APACHE II: A severity of disease classification system," *Critical Care Medicine*, vol. 13, no. 10, pp. 818-829, 1985. [DOI Link](https://doi.org/10.1097/00003246-198510000-00009)
+        
+        <div id="ref-4"></div>
+        
+        - **[[4]](https://doi.org/10.1007/BF01709751)** J.-L. Vincent et al., "The SOFA (Sepsis-related Organ Failure Assessment) score to describe organ dysfunction/failure," *Intensive Care Medicine*, vol. 22, no. 7, pp. 707-710, 1996. [DOI Link](https://doi.org/10.1007/BF01709751)
+        
+        <div id="ref-5"></div>
+        
+        - **[[5]](https://doi.org/10.1136/bmj-2023-078378)** G. S. Collins et al., "TRIPOD+AI statement: updated guidance for reporting clinical prediction models that use regression or machine learning methods," *BMJ*, vol. 385, p. e078378, 2024. [DOI Link](https://doi.org/10.1136/bmj-2023-078378)
+        
+        <div id="ref-6"></div>
+        
+        - **[[6]](https://proceedings.neurips.cc/paper/2017/hash/6449f44a102fde848669bdd9eb6b76fa-Abstract.html)** G. Ke et al., "LightGBM: A highly efficient gradient boosting decision tree," in *Proc. Advances in Neural Information Processing Systems (NIPS)*, 2017, pp. 3146-3154. [Paper Link](https://proceedings.neurips.cc/paper/2017/hash/6449f44a102fde848669bdd9eb6b76fa-Abstract.html)
+        
+        <div id="ref-7"></div>
+        
+        - **[[7]](https://doi.org/10.1161/01.CIR.101.23.e215)** A. L. Goldberger et al., "PhysioBank, PhysioToolkit, and PhysioNet: Components of a new research resource for complex physiologic signals," *Circulation*, vol. 101, no. 23, pp. e215-e220, 2000. [DOI Link](https://doi.org/10.1161/01.CIR.101.23.e215)
+        
+        <div id="ref-8"></div>
+        
+        - **[[8]](https://doi.org/10.1109/CIC.2012.6424294)** I. Silva, G. Moody, D. J. Scott, L. A. Celi, and R. G. Mark, "Predicting in-hospital mortality of ICU patients: The PhysioNet/Computing in Cardiology Challenge 2012," *Computing in Cardiology*, vol. 39, pp. 245-248, 2012. [DOI Link](https://doi.org/10.1109/CIC.2012.6424294)
+        
+        <div id="ref-9"></div>
+        
+        - **[[9]](https://doi.org/10.1177/0272989X06295361)** A. J. Vickers and E. B. Elkin, "Decision curve analysis: A novel method for evaluating prediction models," *Medical Decision Making*, vol. 26, no. 6, pp. 565-574, 2006. [DOI Link](https://doi.org/10.1177/0272989X06295361)
+        
+        <div id="ref-10"></div>
+        
+        - **[[10]](https://doi.org/10.1136/bmj.m441)** R. D. Riley et al., "Calculating the sample size required for developing a clinical prediction model," *BMJ*, vol. 368, p. m441, 2020. [DOI Link](https://doi.org/10.1136/bmj.m441)
+        
+        ---
+        
         > **Academic Demonstration Notice:** This dashboard is an academic research prototype developed strictly for 
         > engineering evaluation and educational demonstration. It is NOT certified as a medical device and is NOT intended 
         > for direct clinical diagnosis, patient management, or bedside treatment decisions.
         """)
-
-    st.markdown("---")
-    st.caption("AURA-ICU CDSS | Department of Computer Science & Engineering, DYPSEM Kolhapur | Project 23CSEU7J12")
